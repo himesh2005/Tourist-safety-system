@@ -1,0 +1,35 @@
+[
+  {
+    "id": "nagpur-zone-1",
+    "name": "Mankapur Industrial Area",
+    "type": "restricted",
+    "coordinates": [
+      [21.1785, 79.0502],
+      [21.1802, 79.0536],
+      [21.1768, 79.0564],
+      [21.1748, 79.0521]
+    ]
+  },
+  {
+    "id": "nagpur-zone-2",
+    "name": "Sitabuldi Transit Corridor",
+    "type": "caution",
+    "coordinates": [
+      [21.1456, 79.0758],
+      [21.1483, 79.0804],
+      [21.1437, 79.0842],
+      [21.1418, 79.0786]
+    ]
+  },
+  {
+    "id": "nagpur-zone-3",
+    "name": "Besa Peripheral Security Zone",
+    "type": "restricted",
+    "coordinates": [
+      [21.1038, 79.0679],
+      [21.1074, 79.0731],
+      [21.1029, 79.0778],
+      [21.0994, 79.0714]
+    ]
+  }
+]
