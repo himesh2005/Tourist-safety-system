@@ -1,68 +1,73 @@
 import { motion } from "framer-motion";
 
-const COPY = {
-  restricted: {
-    title: "\u{1F6AB} Restricted Area",
-    points: [
-      "Officially restricted for safety reasons",
-      "Unauthorized entry may be unsafe",
-      "Follow administrative guidelines",
-    ],
-  },
-  high_crime: {
-    title: "\u26A0 High Crime Area",
-    points: [
-      "Higher incident activity reported in this area",
-      "Avoid isolated movement and dark shortcuts",
-      "Keep emergency contacts reachable",
-    ],
-  },
-  time_based: {
-    title: "\u{1F319} Night Risk Zone",
-    points: [
-      "Risk increases during configured late-night hours",
-      "Prefer well-lit public routes",
-      "Exit the zone before risk window if possible",
-    ],
-  },
-};
+function contentByType(type) {
+  if (type === "restricted") {
+    return {
+      title: "\uD83D\uDEAB Restricted Area",
+      points: [
+        "Officially restricted for safety reasons",
+        "Unauthorized entry may be unsafe",
+        "Follow administrative guidelines",
+      ],
+      emergency: "Remain in well-lit public areas.",
+    };
+  }
 
-function capitalize(value) {
-  return String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1);
+  if (type === "high_crime") {
+    return {
+      title: "\u26A0 High Crime Area",
+      points: [
+        "Reported higher incident activity",
+        "Avoid isolated movement",
+        "Stay alert in crowded junctions",
+      ],
+      emergency: "Stay near active public spots and keep emergency contacts ready.",
+    };
+  }
+
+  return {
+    title: "\uD83C\uDF19 Night Risk Zone",
+    points: [
+      "Risk increases during configured hours",
+      "Avoid staying in this zone late night",
+      "Plan safer routes before high-risk window",
+    ],
+    emergency: "Exit toward a lit arterial road and share your live location.",
+  };
 }
 
 export default function ZonePopup({ zone, onClose }) {
   if (!zone) return null;
-
-  const content = COPY[zone.type] || COPY.restricted;
-  const safeHours =
-    zone.type === "time_based" && zone.activeHours
-      ? `${zone.activeHours.start}:00 - ${zone.activeHours.end}:00`
-      : "Monitored continuously";
+  const content = contentByType(zone.type);
 
   return (
     <motion.div
-      className={`zone-popup-card zone-popup-${zone.type}`}
-      initial={{ opacity: 0, y: 6 }}
+      className={`zone-popup-card glow-${zone.type}`}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 6 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      exit={{ opacity: 0, y: 8 }}
+      transition={{ duration: 0.2 }}
     >
       <div className="zone-popup-head">
         <h4>{content.title}</h4>
-        <button className="zone-close" onClick={onClose} type="button" aria-label="Close zone details">
+        <button className="zone-close" onClick={onClose} aria-label="Close zone popup">
           X
         </button>
       </div>
 
-      <div className="zone-badge">Risk Level: {capitalize(zone.riskLevel)}</div>
       <ul>
         {content.points.map((point) => (
           <li key={point}>{point}</li>
         ))}
       </ul>
-      {zone.type === "time_based" ? <p className="zone-safe-hours">Safe Hours: {safeHours}</p> : null}
-      <p className="zone-emergency">Emergency Suggestion: Remain in well-lit public areas.</p>
+
+      <div className="zone-badge">Risk Level: {String(zone.riskLevel || "").toUpperCase()}</div>
+      {zone.type === "time_based" && zone.activeHours ? (
+        <p className="zone-safe-hours">
+          Safe hours: Outside {zone.activeHours.start}:00 - {zone.activeHours.end}:00
+        </p>
+      ) : null}
+      <p className="zone-emergency">Emergency Suggestion: {content.emergency}</p>
     </motion.div>
   );
 }
