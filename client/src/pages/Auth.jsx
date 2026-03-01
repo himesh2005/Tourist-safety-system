@@ -1,73 +1,107 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Auth() {
   const nav = useNavigate();
   const [username, setU] = useState("");
   const [password, setP] = useState("");
   const [msg, setMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function login(e) {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setMsg("Logging in...");
 
-    const res = await fetch("/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const res = await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const data = await res.json();
-    if (!res.ok) {
-      setMsg(data.error || "Login failed");
-      return;
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(data.error || "Login failed");
+        setIsSubmitting(false);
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("blockchainId", data.blockchainId);
+      setMsg("Success - Redirecting...");
+      nav("/dashboard");
+    } catch {
+      setMsg("Network error. Please try again.");
+      setIsSubmitting(false);
     }
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("blockchainId", data.blockchainId);
-    setMsg("Success ✅");
-    nav("/dashboard");
   }
 
   return (
-    <div style={wrap}>
-      <h2>Traveller Safety — Login</h2>
+    <div className="auth-screen page-container">
+      <motion.form
+        onSubmit={login}
+        className="glass-card auth-card"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
+        <h2 className="auth-title">Tourist Safety System</h2>
+        <p className="auth-subtitle">Sign in to access your live geofence dashboard.</p>
 
-      <form onSubmit={login} style={card}>
-        <input
-          style={inp}
-          placeholder="username"
-          value={username}
-          onChange={(e) => setU(e.target.value)}
-        />
-        <input
-          style={inp}
-          placeholder="password"
-          type="password"
-          value={password}
-          onChange={(e) => setP(e.target.value)}
-        />
-        <button style={btn}>Login</button>
-        <div style={{ marginTop: 10 }}>{msg}</div>
-      </form>
+        <div className="auth-form">
+          <div className="field-wrap">
+            <input
+              className="field"
+              placeholder=" "
+              value={username}
+              onChange={(e) => setU(e.target.value)}
+              autoComplete="username"
+            />
+            <label className="field-label">Username</label>
+            <small className="field-help">Use your registered username.</small>
+          </div>
 
-      <p style={{ marginTop: 10 }}>
-  New user? <Link to="/register" style={{ color: "blue" }}>Create account</Link>
-</p>
+          <div className="field-wrap">
+            <input
+              className="field"
+              placeholder=" "
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setP(e.target.value)}
+              autoComplete="current-password"
+            />
+            <label className="field-label">Password</label>
+            <button type="button" className="field-toggle" onClick={() => setShowPassword((v) => !v)}>
+              {showPassword ? <FiEyeOff /> : <FiEye />}
+            </button>
+            <small className="field-help">Never share your password with anyone.</small>
+          </div>
+        </div>
 
-<button
-  type="button"
-  onClick={() => nav("/register")}
-  style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, border: "1px solid #333", background: "#fff", cursor: "pointer" }}
->
-  Create account
-</button>
+        <div className="auth-actions">
+          <motion.button whileHover={{ scale: 1.02 }} type="submit" className="pill-btn" disabled={isSubmitting}>
+            {isSubmitting ? "Signing in..." : "Login"}
+          </motion.button>
+          <Link to="/register">Create account</Link>
+        </div>
 
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={msg}
+            className="auth-msg"
+            initial={{ opacity: 0, y: -2 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 2 }}
+          >
+            {msg}
+          </motion.p>
+        </AnimatePresence>
+      </motion.form>
     </div>
   );
 }
-
-const wrap = { maxWidth: 520, margin: "40px auto", padding: "0 16px", fontFamily: "Arial" };
-const card = { border: "1px solid #ddd", borderRadius: 12, padding: 16 };
-const inp = { width: "100%", padding: 10, margin: "6px 0", borderRadius: 10, border: "1px solid #ccc" };
-const btn = { padding: "10px 14px", borderRadius: 10, border: "1px solid #333", background: "#111", color: "#fff", cursor: "pointer" };

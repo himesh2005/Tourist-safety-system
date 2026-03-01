@@ -272,21 +272,56 @@ function renderVerificationPage(profile, verificationResult) {
   <title>Tourist Safety - Card Verification</title>
   <style>
     *{box-sizing:border-box}
-    body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 14px;background:#f4f7fb;color:#111827}
+    body{
+      margin:0;
+      font-family:"Segoe UI",sans-serif;
+      color:#e6f6ff;
+      background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+      background-size:200% 200%;
+      animation:bgShift 14s ease infinite;
+      min-height:100vh
+    }
+    .shell{max-width:700px;margin:0 auto;padding:24px 16px}
     .container{display:grid;gap:14px}
-    .panel{background:#fff;border:1px solid #dbe2ea;border-radius:14px;padding:16px}
-    .title{font-size:1.3rem;font-weight:700;margin:0}
-    .status{display:inline-block;margin-top:10px;padding:8px 12px;border-radius:999px;font-weight:700}
-    .status-ok{background:#e8f8ee;color:#166534;border:1px solid #86efac}
-    .status-bad{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
-    .section-title{margin:0 0 10px 0;font-size:1.05rem}
-    .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #eef2f6}
+    .panel{
+      border:1px solid rgba(255,255,255,.24);
+      border-radius:20px;
+      padding:16px;
+      backdrop-filter: blur(12px);
+      background:rgba(255,255,255,.06);
+      box-shadow:0 20px 40px rgba(0,0,0,.4)
+    }
+    .title{font-size:1.28rem;font-weight:700;margin:0}
+    .status{display:inline-block;margin-top:10px;padding:10px 16px;border-radius:999px;font-weight:800;font-size:15px}
+    .status-ok{background:linear-gradient(90deg,rgba(22,163,74,.75),rgba(34,197,94,.75));color:#f0fff6;border:1px solid rgba(134,239,172,.75)}
+    .status-bad{background:linear-gradient(90deg,rgba(185,28,28,.8),rgba(239,68,68,.8));color:#fff5f5;border:1px solid rgba(252,165,165,.75)}
+    .section-title{margin:0 0 10px 0;font-size:1.02rem}
+    .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.12)}
     .row:last-child{border-bottom:none}
-    .key{color:#4b5563;font-weight:600}
+    .key{color:#b8cfdd;font-weight:600}
     .val{font-weight:600;text-align:right;word-break:break-word}
-    .ok{color:#166534;font-weight:700}
-    .bad{color:#b91c1c;font-weight:700}
-    .warning{background:#7f1d1d;color:#fff;border-radius:12px;padding:16px;font-weight:700;line-height:1.5;border:1px solid #ef4444}
+    .ok{color:#86efac;font-weight:700}
+    .bad{color:#fca5a5;font-weight:700}
+    .warning{
+      border-radius:14px;
+      padding:15px;
+      font-weight:700;
+      line-height:1.5;
+      color:#fff;
+      background:linear-gradient(90deg,#7f1d1d,#b91c1c);
+      box-shadow:0 0 18px rgba(239,68,68,.42);
+      border:1px solid rgba(252,165,165,.7);
+      animation:slideDown .32s ease-out
+    }
+    @keyframes bgShift{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    @keyframes slideDown{
+      from{transform:translateY(-8px);opacity:0}
+      to{transform:translateY(0);opacity:1}
+    }
     @media (max-width: 640px){
       .row{flex-direction:column;align-items:flex-start}
       .val{text-align:left}
@@ -294,15 +329,16 @@ function renderVerificationPage(profile, verificationResult) {
   </style>
 </head>
 <body>
+  <div class="shell">
   <div class="container">
     <div class="panel">
-      <h1 class="title">🛡 Tourist Safety Emergency Card</h1>
-      <div class="status ${isValid ? "status-ok" : "status-bad"}">${isValid ? "🟢 VALID CARD" : "🔴 INVALID / TAMPERED CARD"}</div>
+      <h1 class="title">Tourist Safety Emergency Card</h1>
+      <div class="status ${isValid ? "status-ok" : "status-bad"}">${isValid ? "VALID CARD" : "INVALID / TAMPERED CARD"}</div>
     </div>
 
     ${isValid ? "" : `
     <div class="warning">
-      ⚠ WARNING<br/>
+      WARNING<br/>
       This QR card failed cryptographic verification.<br/>
       Do NOT trust this information.
     </div>
@@ -326,6 +362,7 @@ function renderVerificationPage(profile, verificationResult) {
       <div class="row"><div class="key">Verification ID</div><div class="val">${verificationId}</div></div>
       <div class="row"><div class="key">Verified At</div><div class="val">${escapeHtml(verifiedAt)}</div></div>
     </div>
+  </div>
   </div>
 </body>
 </html>
@@ -434,6 +471,14 @@ async function go(){
 });
 
 // ===== AUTH =====
+app.post("/api/check-username", (req, res) => {
+  const username = String(req.body?.username || "").trim();
+  if (!username) {
+    return res.status(400).json({ available: false });
+  }
+  return res.json({ available: !users.has(username) });
+});
+
 app.post("/auth/register", async (req, res) => {
   try {
     const { username, password, name, bloodGroup, allergies, emergencyContacts, address } = req.body;
@@ -814,6 +859,7 @@ app.get("/my-card", authMiddleware, async (req, res) => {
     process.exit(1);
   }
 })();
+
 
 
 

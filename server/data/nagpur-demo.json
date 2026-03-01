@@ -1,0 +1,52 @@
+{
+  "city": "Nagpur Demo",
+  "center": [21.1458, 79.0882],
+  "zones": [
+    {
+      "id": "demo-restricted-1",
+      "name": "Demo Restricted Zone",
+      "type": "restricted",
+      "riskLevel": "high",
+      "crimeIndex": 9,
+      "source": "Demo Simulation Dataset",
+      "active": "always",
+      "coordinates": [
+        [21.145, 79.0875],
+        [21.1465, 79.0875],
+        [21.1465, 79.0895],
+        [21.145, 79.0895]
+      ]
+    },
+    {
+      "id": "demo-highcrime-1",
+      "name": "Demo High Crime Zone",
+      "type": "high_crime",
+      "riskLevel": "medium",
+      "crimeIndex": 7,
+      "source": "Demo Simulation Dataset",
+      "active": "always",
+      "coordinates": [
+        [21.147, 79.086],
+        [21.148, 79.086],
+        [21.148, 79.088],
+        [21.147, 79.088]
+      ]
+    },
+    {
+      "id": "demo-night-1",
+      "name": "Demo Night Risk Zone",
+      "type": "time_based",
+      "riskLevel": "high",
+      "crimeIndex": 8,
+      "source": "Demo Simulation Dataset",
+      "active": "time_based",
+      "activeHours": { "start": 2, "end": 6 },
+      "coordinates": [
+        [21.144, 79.09],
+        [21.145, 79.09],
+        [21.145, 79.092],
+        [21.144, 79.092]
+      ]
+    }
+  ]
+}

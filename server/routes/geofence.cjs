@@ -4,18 +4,103 @@ const fs = require("fs");
 const path = require("path");
 
 const ZONES_PATH = path.join(__dirname, "..", "data", "zones.json");
+const NAGPUR_DEMO_PATH = path.join(__dirname, "..", "data", "nagpur-demo.json");
+
+function loadZonesFile() {
+  const raw = fs.readFileSync(ZONES_PATH, "utf8");
+  return JSON.parse(raw);
+}
+
+function resolveCityPayload(parsed, cityParam) {
+  const cityKey = String(cityParam || "nagpur").trim().toLowerCase();
+
+  if (cityKey === "nagpur-demo") {
+    const demoRaw = fs.readFileSync(NAGPUR_DEMO_PATH, "utf8");
+    const demoParsed = JSON.parse(demoRaw);
+    if (!demoParsed || !Array.isArray(demoParsed.zones)) {
+      throw new Error("nagpur-demo.json must contain { city, center, zones[] }");
+    }
+    return {
+      cityKey: "nagpur-demo",
+      city: demoParsed.city || "Nagpur Demo",
+      center: Array.isArray(demoParsed.center) ? demoParsed.center : [21.1458, 79.0882],
+      zones: demoParsed.zones,
+    };
+  }
+
+  // Backward compatibility with old array-only zones.json format.
+  if (Array.isArray(parsed)) {
+    return {
+      cityKey: "nagpur",
+      city: "Nagpur",
+      center: [21.1458, 79.0882],
+      zones: parsed,
+    };
+  }
+
+  const picked = parsed[cityKey] || parsed.nagpur;
+  if (!picked || !Array.isArray(picked.zones)) {
+    throw new Error("Invalid zones.json city structure");
+  }
+
+  return {
+    cityKey,
+    city: picked.city || cityKey,
+    center: Array.isArray(picked.center) ? picked.center : [21.1458, 79.0882],
+    zones: picked.zones,
+  };
+}
 
 router.get("/api/zones", (req, res) => {
   try {
-    const raw = fs.readFileSync(ZONES_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      throw new Error("zones.json must contain an array");
-    }
-    return res.json(parsed);
+    const parsed = loadZonesFile();
+    const cityPayload = resolveCityPayload(parsed, req.query.city);
+    return res.json(cityPayload.zones);
   } catch (err) {
     console.log("GEOFENCE /api/zones ERROR:", err);
     return res.status(500).json({ error: "Failed to load geofence zones" });
+  }
+});
+
+router.get("/api/zones/:city", (req, res) => {
+  try {
+    const parsed = loadZonesFile();
+    const cityPayload = resolveCityPayload(parsed, req.params.city);
+    return res.json(cityPayload.zones);
+  } catch (err) {
+    console.log("GEOFENCE /api/zones/:city ERROR:", err);
+    return res.status(500).json({ error: "Failed to load geofence zones" });
+  }
+});
+
+router.get("/api/cities", (req, res) => {
+  try {
+    const parsed = loadZonesFile();
+
+    if (Array.isArray(parsed)) {
+      return res.json([
+        { key: "nagpur", city: "Nagpur", center: [21.1458, 79.0882], zoneCount: parsed.length },
+      ]);
+    }
+
+    const cities = Object.entries(parsed).map(([key, value]) => ({
+      key,
+      city: value?.city || key,
+      center: Array.isArray(value?.center) ? value.center : [21.1458, 79.0882],
+      zoneCount: Array.isArray(value?.zones) ? value.zones.length : 0,
+    }));
+
+    cities.push({
+      key: "nagpur-demo",
+      city: "Nagpur (Demo Alert Mode)",
+      center: [21.1458, 79.0882],
+      zoneCount: 3,
+    });
+
+    return res.json(cities);
+  } catch (err) {
+    console.log("GEOFENCE /api/cities ERROR:", err);
+    return res.status(500).json({ error: "Failed to load cities metadata" });
   }
 });
 
@@ -75,8 +160,8 @@ router.get("/map", (req, res) => {
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     (function () {
-      const NAGPUR_CENTER = [21.1458, 79.0882];
-      const map = L.map("map").setView(NAGPUR_CENTER, 13);
+      const DEFAULT_CENTER = [21.1458, 79.0882];
+      const map = L.map("map").setView(DEFAULT_CENTER, 13);
       const warningBanner = document.getElementById("warningBanner");
       const statusPill = document.getElementById("statusPill");
       const zoneLayers = [];
@@ -93,7 +178,7 @@ router.get("/map", (req, res) => {
           warningBanner.textContent = "";
           return;
         }
-        warningBanner.innerHTML = "⚠ WARNING<br/>You have entered a restricted area: " + zoneName;
+        warningBanner.innerHTML = "? WARNING<br/>You have entered a restricted area: " + zoneName;
         warningBanner.style.display = "block";
       }
 
@@ -122,7 +207,7 @@ router.get("/map", (req, res) => {
           return zone &&
             typeof zone.id === "string" &&
             typeof zone.name === "string" &&
-            (zone.type === "restricted" || zone.type === "caution") &&
+            (zone.type === "restricted" || zone.type === "high_crime" || zone.type === "time_based") &&
             Array.isArray(zone.coordinates) &&
             zone.coordinates.length >= 3 &&
             zone.coordinates.every(function (pair) {
@@ -139,7 +224,10 @@ router.get("/map", (req, res) => {
         zoneLayers.length = 0;
 
         zones.forEach(function (zone) {
-          const color = zone.type === "restricted" ? "#dc2626" : "#eab308";
+          const color =
+            zone.type === "restricted" ? "#dc2626" :
+            zone.type === "high_crime" ? "#f97316" :
+            "#a855f7";
           const polygon = L.polygon(zone.coordinates, { color: color, weight: 2, fillOpacity: 0.22 });
           polygon.bindPopup(zone.name + " (" + zone.type + ")");
           polygon.addTo(map);
@@ -204,7 +292,7 @@ router.get("/map", (req, res) => {
         }).addTo(map);
 
         try {
-          const response = await fetch("/api/zones", { cache: "no-store" });
+          const response = await fetch("/api/zones?city=nagpur", { cache: "no-store" });
           if (!response.ok) throw new Error("Zone API failed with status " + response.status);
           const data = await response.json();
           zones = validateZones(data);

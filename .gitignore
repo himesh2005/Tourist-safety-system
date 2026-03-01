@@ -1,0 +1,36 @@
+# ======================
+# ROOT LEVEL IGNORE
+# ======================
+
+# Node modules (all folders)
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Logs
+*.log
+logs/
+
+# Hardhat
+chain/cache/
+chain/artifacts/
+
+# Server data
+server/verificationLogs.json
+server/data/data.json
+
+# Client build
+client/build/
+client/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+coverage/
