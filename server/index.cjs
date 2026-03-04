@@ -13,11 +13,13 @@ const { ethers, Wallet, getAddress } = require("ethers");
 const { signProfile, verifyProfile } = require("./utils/signature.cjs");
 const { appendVerificationLog } = require("./utils/verificationLogger.cjs");
 const geofenceRoutes = require("./routes/geofence.cjs");
+const emergencyRoutes = require("./routes/emergency.cjs");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/", geofenceRoutes);
+app.use("/", emergencyRoutes);
 
 // ===== ENV =====
 const RPC_URL = (process.env.RPC_URL || "http://127.0.0.1:8545").trim();
@@ -45,6 +47,24 @@ const signingWallet = new Wallet(SIGNING_PRIVATE_KEY);
 const TRUSTED_ISSUER_PUBLIC_KEY = signingWallet.address;
 const issuerPublicKey = signingWallet.address;
 console.log("Signing Wallet Address:", signingWallet.address);
+
+function bcryptHash(password, rounds = 10) {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, rounds, (err, hash) => {
+      if (err) return reject(err);
+      return resolve(hash);
+    });
+  });
+}
+
+function bcryptCompare(password, hash) {
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(password, hash, (err, same) => {
+      if (err) return reject(err);
+      return resolve(Boolean(same));
+    });
+  });
+}
 
 async function ensureChainSync() {
   const statePath = path.join(__dirname, "chain_state.json");
@@ -490,7 +510,7 @@ app.post("/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Missing profile fields" });
     }
 
-    const passHash = await bcrypt.hash(password, 10);
+    const passHash = await bcryptHash(password, 10);
     const blockchainId = "TID-" + crypto.randomBytes(6).toString("hex");
 
     const profile = {
@@ -552,11 +572,18 @@ app.post("/auth/register", async (req, res) => {
 });
 app.post("/auth/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ error: "username and password required" });
+    }
+
     const u = users.get(username);
     if (!u) return res.status(401).json({ error: "Invalid credentials" });
+    if (!u.passHash || typeof u.passHash !== "string") {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    const ok = await bcrypt.compare(password, u.passHash);
+    const ok = await bcryptCompare(password, u.passHash);
     if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "2h" });

@@ -531,6 +531,166 @@ a:hover {
   margin-top: 6px;
 }
 
+.geo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.emergency-services-sidebar {
+  width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 16px;
+  background: #1a1a1a;
+  border: 1px solid rgba(181, 223, 244, 0.18);
+}
+
+.emergency-sidebar-desktop {
+  display: block;
+}
+
+.emergency-sidebar-mobile {
+  display: none;
+  margin-top: 12px;
+}
+
+.emergency-map-toggle {
+  display: none;
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 680;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(20, 30, 40, 0.9);
+}
+
+.emergency-services-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #effbff;
+}
+
+.emergency-services-city {
+  margin: 2px 0 10px;
+  font-size: 12px;
+  color: #a8c4d4;
+}
+
+.service-section + .service-section {
+  margin-top: 12px;
+}
+
+.service-section-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d4ebf6;
+  letter-spacing: 0.02em;
+}
+
+.service-card {
+  border: 1px solid rgba(215, 235, 248, 0.15);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.service-card:hover {
+  border-color: rgba(143, 232, 255, 0.42);
+  box-shadow: 0 0 20px rgba(143, 232, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.service-card + .service-card {
+  margin-top: 8px;
+}
+
+.service-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.service-card-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.service-nearest-badge {
+  font-size: 11px;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: linear-gradient(90deg, #7f1d1d, #b91c1c);
+  border: 1px solid rgba(252, 165, 165, 0.5);
+}
+
+.service-card-nearest {
+  border-color: rgba(252, 165, 165, 0.62);
+  box-shadow: 0 0 0 1px rgba(252, 165, 165, 0.34), 0 0 18px rgba(239, 68, 68, 0.28);
+}
+
+.service-card-address {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #b2cad6;
+}
+
+.service-card-phone {
+  font-size: 12px;
+  color: #8fe8ff;
+}
+
+.service-card-phone.muted {
+  color: #9fb3bf;
+}
+
+.service-card-type {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #91a6b2;
+}
+
+.emergency-services-state {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #bdd3df;
+}
+
+.emergency-services-error {
+  color: #ffb2b2;
+}
+
+.emergency-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.hospital-marker {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.police-marker {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
 .zone-status-banner {
   position: relative;
   z-index: 20;
@@ -780,6 +940,29 @@ a:hover {
   box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.35), 0 0 20px rgba(168, 85, 247, 0.3);
 }
 
+@media (max-width: 1100px) {
+  .geo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-sidebar-desktop {
+    display: none;
+  }
+
+  .emergency-map-toggle {
+    display: inline-flex;
+  }
+
+  .emergency-sidebar-mobile {
+    display: block;
+  }
+
+  .emergency-services-sidebar {
+    max-height: 70vh;
+    width: 100%;
+  }
+}
+
 @media (min-width: 768px) {
   .auth-card {
     padding: 30px;
@@ -825,6 +1008,7 @@ a:hover {
   .demo-badge-row {
     justify-content: flex-start;
   }
+
 }
 
 @keyframes gradientShift {

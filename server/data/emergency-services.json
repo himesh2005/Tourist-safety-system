@@ -1,0 +1,172 @@
+{
+  "Mumbai": {
+    "hospitals": [
+      {
+        "name": "Lilavati Hospital",
+        "address": "Bandra Reclamation, Mumbai",
+        "latitude": 19.05,
+        "longitude": 72.84,
+        "phone": "+91 22 2656 7777"
+      },
+      {
+        "name": "KEM Hospital",
+        "address": "Parel, Mumbai",
+        "latitude": 19.0057,
+        "longitude": 72.8429,
+        "phone": "+91 22 2410 7000"
+      }
+    ],
+    "police_stations": [
+      {
+        "name": "Colaba Police Station",
+        "address": "Colaba, Mumbai",
+        "latitude": 18.9086,
+        "longitude": 72.8141,
+        "phone": "+91 22 2284 1164"
+      },
+      {
+        "name": "Bandra Police Station",
+        "address": "Bandra West, Mumbai",
+        "latitude": 19.0605,
+        "longitude": 72.8365,
+        "phone": "+91 22 2642 2144"
+      }
+    ]
+  },
+  "Pune": {
+    "hospitals": [
+      {
+        "name": "Sassoon Hospital",
+        "address": "Near Pune Railway Station",
+        "latitude": 18.5285,
+        "longitude": 73.8749,
+        "phone": "+91 20 2612 8000"
+      },
+      {
+        "name": "Jehangir Hospital",
+        "address": "Bund Garden Road, Pune",
+        "latitude": 18.5354,
+        "longitude": 73.877,
+        "phone": "+91 20 6681 9999"
+      }
+    ],
+    "police_stations": [
+      {
+        "name": "Shivaji Nagar Police Station",
+        "address": "Shivaji Nagar, Pune",
+        "latitude": 18.5305,
+        "longitude": 73.8475,
+        "phone": "+91 20 2553 0002"
+      },
+      {
+        "name": "Swargate Police Station",
+        "address": "Swargate, Pune",
+        "latitude": 18.5018,
+        "longitude": 73.8606,
+        "phone": "+91 20 2444 2090"
+      }
+    ]
+  },
+  "Nashik": {
+    "hospitals": [
+      {
+        "name": "Wockhardt Hospital Nashik",
+        "address": "Mumbai-Agra Road, Nashik",
+        "latitude": 20.0116,
+        "longitude": 73.7902,
+        "phone": "+91 253 6624444"
+      },
+      {
+        "name": "Apollo Hospital",
+        "address": "Indira Nagar, Nashik",
+        "latitude": 20.0013,
+        "longitude": 73.7765,
+        "phone": "+91 253 239 9933"
+      }
+    ],
+    "police_stations": [
+      {
+        "name": "Nashik Road Police Station",
+        "address": "Nashik Road, Nashik",
+        "latitude": 19.963,
+        "longitude": 73.8381,
+        "phone": "+91 253 2463 100"
+      },
+      {
+        "name": "Panchavati Police Station",
+        "address": "Panchavati, Nashik",
+        "latitude": 20.0104,
+        "longitude": 73.7877,
+        "phone": "+91 253 2511 414"
+      }
+    ]
+  },
+  "Aurangabad": {
+    "hospitals": [
+      {
+        "name": "Government Medical College",
+        "address": "GMC Campus, Aurangabad",
+        "latitude": 19.8902,
+        "longitude": 75.3208,
+        "phone": "+91 240 240 2412"
+      },
+      {
+        "name": "Kamgar Hospital",
+        "address": "MIDC Area, Aurangabad",
+        "latitude": 19.8523,
+        "longitude": 75.3434,
+        "phone": "+91 240 248 1627"
+      }
+    ],
+    "police_stations": [
+      {
+        "name": "CIDCO Police Station",
+        "address": "CIDCO, Aurangabad",
+        "latitude": 19.8762,
+        "longitude": 75.3433,
+        "phone": "+91 240 2486 555"
+      },
+      {
+        "name": "Kranti Chowk Police Station",
+        "address": "Kranti Chowk, Aurangabad",
+        "latitude": 19.8897,
+        "longitude": 75.3182,
+        "phone": "+91 240 2341 415"
+      }
+    ]
+  },
+  "Nagpur": {
+    "hospitals": [
+      {
+        "name": "Government Medical College",
+        "address": "Ajni Road, Nagpur",
+        "latitude": 21.1287,
+        "longitude": 79.0821,
+        "phone": "+91 712 2744671"
+      },
+      {
+        "name": "Wockhardt Hospital",
+        "address": "Shankar Nagar, Nagpur",
+        "latitude": 21.1315,
+        "longitude": 79.0603,
+        "phone": "+91 712 6624100"
+      }
+    ],
+    "police_stations": [
+      {
+        "name": "Sadar Police Station",
+        "address": "Sadar, Nagpur",
+        "latitude": 21.1498,
+        "longitude": 79.0826,
+        "phone": "+91 712 2560200"
+      },
+      {
+        "name": "Sitabuldi Police Station",
+        "address": "Sitabuldi, Nagpur",
+        "latitude": 21.148,
+        "longitude": 79.0849,
+        "phone": "+91 712 2563100"
+      }
+    ]
+  }
+}
