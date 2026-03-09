@@ -1,29 +1,43 @@
 const fs = require("fs");
 const path = require("path");
+const hre = require("hardhat");
 
-async function main() {
-  const TravellerID = await ethers.getContractFactory("TravellerID");
-
-  const contract = await TravellerID.deploy();
-
-  // ✅ ethers v6
+async function deployContract(name, ...args) {
+  const Factory = await hre.ethers.getContractFactory(name);
+  const contract = await Factory.deploy(...args);
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
-  console.log("TravellerID deployed to:", address);
+  console.log(`${name} deployed to: ${address}`);
 
-  // ✅ save for server auto-read
-  const out = {
-    CONTRACT_ADDRESS: address,
-    updatedAt: new Date().toISOString()
+  return { name, address, contract };
+}
+
+async function main() {
+  // Deploy contracts in dependency order (update this list as contracts are added)
+  const deploymentOrder = ["TravellerID"];
+
+  const deployedAddresses = {};
+
+  for (const contractName of deploymentOrder) {
+    const { address } = await deployContract(contractName);
+    deployedAddresses[contractName] = address;
+  }
+
+  const output = {
+    network: hre.network.name,
+    chainId: hre.network.config.chainId ?? null,
+    deployedAt: new Date().toISOString(),
+    contracts: deployedAddresses,
   };
 
-  const outPath = path.join(__dirname, "..", "deployed.json");
-  fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
-  console.log("Saved deployed.json ->", outPath);
+  const outputPath = path.join(__dirname, "..", "deployedAddresses.json");
+  fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+
+  console.log(`Saved deployed addresses to: ${outputPath}`);
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error("Deployment failed:", error);
   process.exit(1);
 });

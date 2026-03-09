@@ -22,8 +22,10 @@ app.use("/", geofenceRoutes);
 app.use("/", emergencyRoutes);
 
 // ===== ENV =====
-const RPC_URL = (process.env.RPC_URL || "http://127.0.0.1:8545").trim();
-const ISSUER_PRIVATE_KEY = (process.env.ISSUER_PRIVATE_KEY || "").trim().replace(/^"|"$/g, "");
+const RPC_URL = (process.env.AMOY_RPC_URL || "").trim();
+const PRIVATE_KEY = (process.env.PRIVATE_KEY || "")
+  .trim()
+  .replace(/^"|"$/g, "");
 const JWT_SECRET = (process.env.JWT_SECRET || "dev_secret").trim();
 const PORT = Number((process.env.PORT || "5000").trim());
 function getLocalIPv4() {
@@ -37,11 +39,17 @@ function getLocalIPv4() {
   return "localhost";
 }
 const LOCAL_IP = getLocalIPv4();
-const BASE_URL = (process.env.BASE_URL || `http://${LOCAL_IP}:${PORT}`).trim().replace(/\/+$/, "");
+const BASE_URL = (process.env.BASE_URL || `http://${LOCAL_IP}:${PORT}`)
+  .trim()
+  .replace(/\/+$/, "");
 // ===== System signing key (for QR signature issuance) =====
-const SIGNING_PRIVATE_KEY = (process.env.SIGNING_PRIVATE_KEY || "").trim().replace(/^"|"$/g, "");
+const SIGNING_PRIVATE_KEY = (process.env.SIGNING_PRIVATE_KEY || "")
+  .trim()
+  .replace(/^"|"$/g, "");
 if (!SIGNING_PRIVATE_KEY) {
-  throw new Error("SIGNING_PRIVATE_KEY is not configured in environment variables.");
+  throw new Error(
+    "SIGNING_PRIVATE_KEY is not configured in environment variables.",
+  );
 }
 const signingWallet = new Wallet(SIGNING_PRIVATE_KEY);
 const TRUSTED_ISSUER_PUBLIC_KEY = signingWallet.address;
@@ -74,18 +82,26 @@ async function ensureChainSync() {
 
   // Read old state
   let prev = null;
-  try { prev = JSON.parse(fs.readFileSync(statePath, "utf-8")); } catch {}
+  try {
+    prev = JSON.parse(fs.readFileSync(statePath, "utf-8"));
+  } catch {}
 
   // If chain restarted (block number small again) OR chainId changed
-  const restarted = prev && (prev.chainId !== chainId || block < (prev.blockNumber || 0));
+  const restarted =
+    prev && (prev.chainId !== chainId || block < (prev.blockNumber || 0));
 
   if (restarted) {
-    console.log("⚠️ Detected Hardhat chain reset. Clearing local data.json to avoid ID mismatch.");
+    console.log(
+      "⚠️ Detected Hardhat chain reset. Clearing local data.json to avoid ID mismatch.",
+    );
     // Clear local store
     if (fs.existsSync(DATA_PATH)) fs.unlinkSync(DATA_PATH);
   }
 
-  fs.writeFileSync(statePath, JSON.stringify({ chainId, blockNumber: block }, null, 2));
+  fs.writeFileSync(
+    statePath,
+    JSON.stringify({ chainId, blockNumber: block }, null, 2),
+  );
 }
 
 // ===== Persistence =====
@@ -102,45 +118,68 @@ function loadData() {
 }
 
 const loaded = loadData();
-const users = new Map(Object.entries(loaded.users || {}));        // username -> { username, passHash, blockchainId }
-const profiles = new Map(Object.entries(loaded.profiles || {}));  // blockchainId -> profile
+const users = new Map(Object.entries(loaded.users || {})); // username -> { username, passHash, blockchainId }
+const profiles = new Map(Object.entries(loaded.profiles || {})); // blockchainId -> profile
 console.log("Loaded users:", users.size, "Loaded profiles:", profiles.size);
 
 function saveData() {
   const usersObj = Object.fromEntries(users.entries());
   const profilesObj = Object.fromEntries(profiles.entries());
-  fs.writeFileSync(DATA_PATH, JSON.stringify({ users: usersObj, profiles: profilesObj }, null, 2));
+  fs.writeFileSync(
+    DATA_PATH,
+    JSON.stringify({ users: usersObj, profiles: profilesObj }, null, 2),
+  );
 }
 
 // ===== Contract address loading =====
-const DEPLOYED_PATH = path.join(__dirname, "..", "chain", "deployed.json");
+const DEPLOYED_PATH = path.join(
+  __dirname,
+  "..",
+  "chain",
+  "deployedAddresses.json",
+);
 
 function loadContractAddress() {
   try {
     const j = JSON.parse(fs.readFileSync(DEPLOYED_PATH, "utf-8"));
-    return String(j.CONTRACT_ADDRESS || "").trim();
+    return String(
+      j?.contracts?.TravellerID || j?.CONTRACT_ADDRESS || "",
+    ).trim();
   } catch (e) {
     return "";
   }
 }
 
-// Prefer .env if present; otherwise read deployed.json
+// Prefer .env if present; otherwise read deployedAddresses.json
 const CONTRACT_ADDRESS =
   (process.env.CONTRACT_ADDRESS || "").trim().replace(/^"|"$/g, "") ||
   loadContractAddress();
 
 // ===== hard checks =====
+if (!RPC_URL) {
+  console.log("BAD AMOY_RPC_URL:", RPC_URL);
+  console.log("Fix: set AMOY_RPC_URL in server/.env");
+  process.exit(1);
+}
+
+if (!PRIVATE_KEY) {
+  console.log("BAD PRIVATE_KEY:", PRIVATE_KEY);
+  console.log("Fix: set PRIVATE_KEY in server/.env");
+  process.exit(1);
+}
 
 if (!ethers.isAddress(CONTRACT_ADDRESS)) {
   console.log("BAD CONTRACT_ADDRESS:", CONTRACT_ADDRESS);
-  console.log("Fix: run deploy first so chain/deployed.json is created, OR set CONTRACT_ADDRESS in server/.env");
+  console.log(
+    "Fix: run deploy first so chain/deployedAddresses.json is created, OR set CONTRACT_ADDRESS in server/.env",
+  );
   process.exit(1);
 }
 
 // ===== Blockchain =====
 const ABI = [
   "function createId(string blockchainId, bytes32 profileHash) external",
-  "function getRecord(string blockchainId) external view returns (bytes32, uint256, address)"
+  "function getRecord(string blockchainId) external view returns (bytes32, uint256, address)",
 ];
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
@@ -149,17 +188,15 @@ let wallet;
 let contract;
 
 async function getIssuerWallet() {
-  const accounts = await provider.listAccounts();
-  const addr0 = typeof accounts[0] === "string" ? accounts[0] : accounts[0].address;
-  console.log("Using Hardhat Account:", addr0);
-  return await provider.getSigner(addr0);
+  const issuerWallet = new Wallet(PRIVATE_KEY, provider);
+  console.log("Using Issuer Wallet:", issuerWallet.address);
+  return issuerWallet;
 }
 
 async function initBlockchain() {
   wallet = await getIssuerWallet();
   contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
 }
-
 
 async function resyncChainFromLocal() {
   const ids = Array.from(profiles.keys());
@@ -199,12 +236,14 @@ function buildSignableQrProfile(input) {
     allergies: input.allergies || "",
     emergencyContacts: input.emergencyContacts,
     address: input.address,
-    onChainHash: input.onChainHash
+    onChainHash: input.onChainHash,
   };
 }
 
 function buildVerificationUrl(qrPayload) {
-  const base64Payload = Buffer.from(JSON.stringify(qrPayload), "utf8").toString("base64");
+  const base64Payload = Buffer.from(JSON.stringify(qrPayload), "utf8").toString(
+    "base64",
+  );
   return `${BASE_URL}/verify-card?payload=${encodeURIComponent(base64Payload)}`;
 }
 
@@ -253,7 +292,7 @@ function validateVerifyCardPayload(input) {
     "address",
     "onChainHash",
     "signature",
-    "issuerPublicKey"
+    "issuerPublicKey",
   ];
 
   for (const key of required) {
@@ -277,11 +316,13 @@ function renderVerificationPage(profile, verificationResult) {
     bloodGroup: escapeHtml(profile.bloodGroup || "-"),
     allergies: escapeHtml(profile.allergies || "-"),
     emergencyContacts: escapeHtml(profile.emergencyContacts || "-"),
-    address: escapeHtml(profile.address || "-")
+    address: escapeHtml(profile.address || "-"),
   };
   const isValid = verificationResult.finalStatus === "VALID";
   const verifiedAt = formatTimestamp(verificationResult.timestamp);
-  const verificationId = escapeHtml(verificationResult.verificationId || "VER-UNKNOWN");
+  const verificationId = escapeHtml(
+    verificationResult.verificationId || "VER-UNKNOWN",
+  );
 
   return `
 <!doctype html>
@@ -356,13 +397,17 @@ function renderVerificationPage(profile, verificationResult) {
       <div class="status ${isValid ? "status-ok" : "status-bad"}">${isValid ? "VALID CARD" : "INVALID / TAMPERED CARD"}</div>
     </div>
 
-    ${isValid ? "" : `
+    ${
+      isValid
+        ? ""
+        : `
     <div class="warning">
       WARNING<br/>
       This QR card failed cryptographic verification.<br/>
       Do NOT trust this information.
     </div>
-    `}
+    `
+    }
 
     <div class="panel">
       <h2 class="section-title">Profile</h2>
@@ -408,7 +453,13 @@ function authMiddleware(req, res, next) {
 
 // ===== Basic routes =====
 app.get("/", (req, res) => {
-  res.send("Server is running ✅ Use /register-ui, /auth/register, /auth/login, /scan/:id");
+  res.send(
+    "Server is running ✅ Use /register-ui, /auth/register, /auth/login, /scan/:id",
+  );
+});
+
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
 app.get("/debug/state", (req, res) => {
@@ -416,7 +467,7 @@ app.get("/debug/state", (req, res) => {
     usersCount: users.size,
     profilesCount: profiles.size,
     profileIds: Array.from(profiles.keys()).slice(0, 20),
-    contractAddress: CONTRACT_ADDRESS
+    contractAddress: CONTRACT_ADDRESS,
   });
 });
 
@@ -501,10 +552,20 @@ app.post("/api/check-username", (req, res) => {
 
 app.post("/auth/register", async (req, res) => {
   try {
-    const { username, password, name, bloodGroup, allergies, emergencyContacts, address } = req.body;
+    const {
+      username,
+      password,
+      name,
+      bloodGroup,
+      allergies,
+      emergencyContacts,
+      address,
+    } = req.body;
 
-    if (!username || !password) return res.status(400).json({ error: "username and password required" });
-    if (users.has(username)) return res.status(409).json({ error: "username already exists" });
+    if (!username || !password)
+      return res.status(400).json({ error: "username and password required" });
+    if (users.has(username))
+      return res.status(409).json({ error: "username already exists" });
 
     if (!name || !bloodGroup || !emergencyContacts || !address) {
       return res.status(400).json({ error: "Missing profile fields" });
@@ -522,7 +583,7 @@ app.post("/auth/register", async (req, res) => {
       emergencyContacts,
       address,
       aadhaarVerified: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const profileHash = sha256Hex(JSON.stringify(profile));
@@ -543,14 +604,14 @@ app.post("/auth/register", async (req, res) => {
       allergies: allergies || "",
       emergencyContacts,
       address,
-      onChainHash: profileHash
+      onChainHash: profileHash,
     });
     const signature = await signProfile(signableProfile, signingWallet);
     const qrPayload = {
       type: "TouristSafetyEmergencyCard",
       ...signableProfile,
       signature,
-      issuerPublicKey
+      issuerPublicKey,
     };
     const scanUrl = `${BASE_URL}/scan/${blockchainId}`;
     const verificationUrl = buildVerificationUrl(qrPayload);
@@ -563,7 +624,7 @@ app.post("/auth/register", async (req, res) => {
       scanUrl,
       verificationUrl,
       qrDataUrl,
-      qrText: verificationUrl
+      qrText: verificationUrl,
     });
   } catch (err) {
     console.log("REGISTER ERROR:", err);
@@ -606,7 +667,8 @@ app.get("/api/verify/:blockchainId", async (req, res) => {
     const { blockchainId } = req.params;
 
     const profile = profiles.get(blockchainId);
-    if (!profile) return res.status(404).json({ error: "Profile not found (local store)" });
+    if (!profile)
+      return res.status(404).json({ error: "Profile not found (local store)" });
 
     const localHash = sha256Hex(JSON.stringify(profile));
     const [onChainHash] = await contract.getRecord(blockchainId);
@@ -617,7 +679,7 @@ app.get("/api/verify/:blockchainId", async (req, res) => {
       bloodGroup: profile.bloodGroup,
       allergies: profile.allergies,
       emergencyContacts: profile.emergencyContacts,
-      address: profile.address
+      address: profile.address,
     };
 
     res.json({
@@ -625,8 +687,8 @@ app.get("/api/verify/:blockchainId", async (req, res) => {
       proof: {
         localHash,
         onChainHash,
-        match: localHash.toLowerCase() === String(onChainHash).toLowerCase()
-      }
+        match: localHash.toLowerCase() === String(onChainHash).toLowerCase(),
+      },
     });
   } catch (err) {
     console.log("VERIFY ERROR:", err);
@@ -634,12 +696,16 @@ app.get("/api/verify/:blockchainId", async (req, res) => {
   }
 });
 
-
 app.post("/verify-signature", async (req, res) => {
   try {
     const { profile, signature, publicKey } = req.body || {};
     if (!profile || !signature || !publicKey) {
-      return res.status(400).json({ valid: false, error: "profile, signature and publicKey are required" });
+      return res
+        .status(400)
+        .json({
+          valid: false,
+          error: "profile, signature and publicKey are required",
+        });
     }
 
     const valid = await verifyProfile(profile, signature, publicKey);
@@ -659,7 +725,7 @@ app.get("/verify-card", async (req, res) => {
     issuerValid: false,
     finalStatus: "INVALID",
     verificationId: "VER-UNKNOWN",
-    timestamp: requestTimestamp
+    timestamp: requestTimestamp,
   };
 
   try {
@@ -668,7 +734,8 @@ app.get("/verify-card", async (req, res) => {
     let signableProfile = buildSignableQrProfile({});
 
     try {
-      if (!payload || payload.length > 20000) throw new Error("Missing or oversized payload");
+      if (!payload || payload.length > 20000)
+        throw new Error("Missing or oversized payload");
       const decoded = Buffer.from(payload, "base64").toString("utf8");
       parsed = JSON.parse(decoded);
       signableProfile = buildSignableQrProfile(parsed || {});
@@ -679,10 +746,12 @@ app.get("/verify-card", async (req, res) => {
         ipAddress: requestIp,
         signatureValid: false,
         blockchainMatched: false,
-        finalStatus: "INVALID"
+        finalStatus: "INVALID",
       });
       fallbackResult.verificationId = verificationId;
-      return res.status(400).send(renderVerificationPage(signableProfile, fallbackResult));
+      return res
+        .status(400)
+        .send(renderVerificationPage(signableProfile, fallbackResult));
     }
 
     const payloadValidation = validateVerifyCardPayload(parsed);
@@ -693,10 +762,12 @@ app.get("/verify-card", async (req, res) => {
         ipAddress: requestIp,
         signatureValid: false,
         blockchainMatched: false,
-        finalStatus: "INVALID"
+        finalStatus: "INVALID",
       });
       fallbackResult.verificationId = verificationId;
-      return res.status(400).send(renderVerificationPage(signableProfile, fallbackResult));
+      return res
+        .status(400)
+        .send(renderVerificationPage(signableProfile, fallbackResult));
     }
 
     const normalizedPayloadIssuer = normalizeAddress(parsed.issuerPublicKey);
@@ -704,7 +775,7 @@ app.get("/verify-card", async (req, res) => {
     const issuerValid = Boolean(
       normalizedPayloadIssuer &&
       normalizedTrustedIssuer &&
-      normalizedPayloadIssuer === normalizedTrustedIssuer
+      normalizedPayloadIssuer === normalizedTrustedIssuer,
     );
 
     const verificationResult = {
@@ -713,23 +784,32 @@ app.get("/verify-card", async (req, res) => {
       issuerValid,
       finalStatus: "INVALID",
       verificationId: "VER-UNKNOWN",
-      timestamp: requestTimestamp
+      timestamp: requestTimestamp,
     };
 
     if (issuerValid) {
       const signature = String(parsed.signature || "");
-      verificationResult.signatureValid = await verifyProfile(signableProfile, signature, normalizedPayloadIssuer);
+      verificationResult.signatureValid = await verifyProfile(
+        signableProfile,
+        signature,
+        normalizedPayloadIssuer,
+      );
 
       if (verificationResult.signatureValid) {
         try {
-          const localProfile = profiles.get(String(signableProfile.blockchainId || ""));
+          const localProfile = profiles.get(
+            String(signableProfile.blockchainId || ""),
+          );
           if (localProfile) {
             const localRecomputedHash = sha256Hex(JSON.stringify(localProfile));
-            const [onChainHash] = await contract.getRecord(String(signableProfile.blockchainId || ""));
+            const [onChainHash] = await contract.getRecord(
+              String(signableProfile.blockchainId || ""),
+            );
             const chainHash = String(onChainHash || "").toLowerCase();
             verificationResult.blockchainMatched =
               localRecomputedHash.toLowerCase() === chainHash &&
-              String(signableProfile.onChainHash || "").toLowerCase() === chainHash;
+              String(signableProfile.onChainHash || "").toLowerCase() ===
+                chainHash;
           }
         } catch {
           verificationResult.blockchainMatched = false;
@@ -738,7 +818,9 @@ app.get("/verify-card", async (req, res) => {
     }
 
     verificationResult.finalStatus =
-      verificationResult.issuerValid && verificationResult.signatureValid && verificationResult.blockchainMatched
+      verificationResult.issuerValid &&
+      verificationResult.signatureValid &&
+      verificationResult.blockchainMatched
         ? "VALID"
         : "INVALID";
 
@@ -748,12 +830,12 @@ app.get("/verify-card", async (req, res) => {
       ipAddress: requestIp,
       signatureValid: verificationResult.signatureValid,
       blockchainMatched: verificationResult.blockchainMatched,
-      finalStatus: verificationResult.finalStatus
+      finalStatus: verificationResult.finalStatus,
     });
 
-    return res.status(verificationResult.finalStatus === "VALID" ? 200 : 400).send(
-      renderVerificationPage(signableProfile, verificationResult)
-    );
+    return res
+      .status(verificationResult.finalStatus === "VALID" ? 200 : 400)
+      .send(renderVerificationPage(signableProfile, verificationResult));
   } catch (err) {
     console.log("VERIFY CARD ERROR:", err);
     try {
@@ -763,10 +845,12 @@ app.get("/verify-card", async (req, res) => {
         ipAddress: requestIp,
         signatureValid: false,
         blockchainMatched: false,
-        finalStatus: "INVALID"
+        finalStatus: "INVALID",
       });
     } catch {}
-    return res.status(400).send(renderVerificationPage(buildSignableQrProfile({}), fallbackResult));
+    return res
+      .status(400)
+      .send(renderVerificationPage(buildSignableQrProfile({}), fallbackResult));
   }
 });
 // ===== Scan / Verify Page =====
@@ -849,14 +933,14 @@ app.get("/my-card", authMiddleware, async (req, res) => {
       allergies: profile.allergies || "",
       emergencyContacts: profile.emergencyContacts,
       address: profile.address,
-      onChainHash
+      onChainHash,
     });
     const signature = await signProfile(signableProfile, signingWallet);
     const qrPayload = {
       type: "TouristSafetyEmergencyCard",
       ...signableProfile,
       signature,
-      issuerPublicKey
+      issuerPublicKey,
     };
     const verificationUrl = buildVerificationUrl(qrPayload);
     const qrDataUrl = await QRCode.toDataURL(verificationUrl);
@@ -867,7 +951,7 @@ app.get("/my-card", authMiddleware, async (req, res) => {
       scanUrl,
       verificationUrl,
       qrDataUrl,
-      qrText: verificationUrl
+      qrText: verificationUrl,
     });
   } catch (err) {
     res.status(500).json({ error: "my-card failed", details: String(err) });
@@ -877,7 +961,7 @@ app.get("/my-card", authMiddleware, async (req, res) => {
 (async function start() {
   try {
     await initBlockchain();
-    await resyncChainFromLocal();   // ✅ ADD THIS LINE
+    await resyncChainFromLocal(); // ✅ ADD THIS LINE
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on LAN at ${BASE_URL}`);
     });
@@ -886,10 +970,3 @@ app.get("/my-card", authMiddleware, async (req, res) => {
     process.exit(1);
   }
 })();
-
-
-
-
-
-
-
