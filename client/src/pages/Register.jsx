@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { toApiUrl } from "../config/env.js";
+import { API_URL } from "../config/env.js";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const usernameRegex = /^[A-Za-z0-9]{4,}$/;
@@ -43,7 +43,7 @@ export default function Register() {
     const timer = setTimeout(async () => {
       try {
         setCheckingUsername(true);
-        const res = await fetch(toApiUrl("/api/check-username"), {
+        const res = await fetch(`${API_URL}/api/check-username`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username }),
@@ -119,7 +119,7 @@ export default function Register() {
     setMsg("Creating account...");
 
     try {
-      const res = await fetch(toApiUrl("/auth/register"), {
+      const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

@@ -5,7 +5,14 @@ import Banner from "./Banner.jsx";
 import ZonePopup from "./ZonePopup.jsx";
 import EmergencySidebar from "./EmergencyServices/EmergencySidebar.tsx";
 import { useNearestEmergencyService } from "./EmergencyServices/useNearestEmergencyService.ts";
-import { toApiUrl } from "../config/env.js";
+import { API_URL } from "../config/env.js";
+
+const BASE_API_URL = String(API_URL || "http://localhost:5000").replace(
+  /\/+$/,
+  "",
+);
+const api = (path = "") =>
+  `${BASE_API_URL}${String(path).startsWith("/") ? path : `/${path}`}`;
 
 const NAGPUR_CENTER = [21.1458, 79.0882];
 const DEMO_LOCATION = [21.1445, 79.091];
@@ -170,7 +177,6 @@ export default function GeofenceMap() {
 
   function isZoneActive(zone, hour = getCurrentHour()) {
     if (!zone || typeof zone !== "object") return false;
-
     if (zone.active === "always") return true;
 
     if (zone.active === "time_based" && zone.activeHours) {
@@ -178,10 +184,7 @@ export default function GeofenceMap() {
       const end = Number(zone.activeHours.end);
       if (!Number.isInteger(start) || !Number.isInteger(end)) return false;
 
-      if (start < end) {
-        return hour >= start && hour < end;
-      }
-
+      if (start < end) return hour >= start && hour < end;
       return hour >= start || hour < end;
     }
 
@@ -267,9 +270,7 @@ export default function GeofenceMap() {
       setCurrentHour(new Date().getHours());
     }, 60000);
 
-    return () => {
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -277,9 +278,7 @@ export default function GeofenceMap() {
 
     async function loadCities() {
       try {
-        const response = await fetch(toApiUrl("/api/cities"), {
-          cache: "no-store",
-        });
+        const response = await fetch(api("/api/cities"), { cache: "no-store" });
         if (!response.ok) throw new Error("Cities fetch failed");
         const data = await response.json();
         if (cancelled) return;
@@ -331,7 +330,7 @@ export default function GeofenceMap() {
     async function loadZones() {
       try {
         const response = await fetch(
-          toApiUrl(`/api/zones/${encodeURIComponent(selectedCity)}`),
+          api(`/api/zones/${encodeURIComponent(selectedCity)}`),
           { cache: "no-store" },
         );
         if (!response.ok) throw new Error("Zones fetch failed");
@@ -525,9 +524,7 @@ export default function GeofenceMap() {
       lastAlertTimeRef.current = now;
     }, intervalMs);
 
-    return () => {
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, [isDemoMode, activeZone]);
 
   useEffect(() => {
@@ -543,7 +540,7 @@ export default function GeofenceMap() {
       try {
         const [lat, lng] = userPosition;
         const url =
-          `${toApiUrl("/api/emergency")}?city=${encodeURIComponent(cityName)}` +
+          `${api("/api/emergency")}?city=${encodeURIComponent(cityName)}` +
           `&lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`;
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) throw new Error("Emergency API failed");

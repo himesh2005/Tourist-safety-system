@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { toApiUrl } from "../config/env.js";
+import { API_URL } from "../config/env.js";
 
 export default function Auth() {
   const nav = useNavigate();
@@ -19,7 +19,7 @@ export default function Auth() {
     setMsg("Logging in...");
 
     try {
-      const res = await fetch(toApiUrl("/auth/login"), {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

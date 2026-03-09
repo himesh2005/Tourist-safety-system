@@ -5,7 +5,12 @@ import { FaQrcode } from "react-icons/fa6";
 import { FiChevronDown, FiCopy, FiLogOut, FiShield } from "react-icons/fi";
 import AreaIntelligencePanel from "../components/AreaIntelligencePanel.jsx";
 import GeofenceMap from "../components/GeofenceMap";
-import { toApiUrl } from "../config/env.js";
+import { API_URL } from "../config/env.js";
+
+const BASE_API_URL = String(API_URL || "http://localhost:5000").replace(
+  /\/+$/,
+  "",
+);
 
 export default function Dashboard() {
   const nav = useNavigate();
@@ -19,13 +24,15 @@ export default function Dashboard() {
     const token = localStorage.getItem("token");
     if (!token) return nav("/auth");
 
-    fetch(toApiUrl("/me"), { headers: { Authorization: "Bearer " + token } })
+    fetch(`${BASE_API_URL}/me`, {
+      headers: { Authorization: "Bearer " + token },
+    })
       .then((r) => r.json())
       .then((d) => setMe(d))
       .catch(() => nav("/auth"));
 
     setMsg("Loading your QR...");
-    fetch(toApiUrl("/my-card"), {
+    fetch(`${BASE_API_URL}/my-card`, {
       headers: { Authorization: "Bearer " + token },
     })
       .then((r) => r.json())
@@ -54,7 +61,7 @@ export default function Dashboard() {
   }
 
   const verifyApiLink = me?.blockchainId
-    ? toApiUrl(`/api/verify/${me.blockchainId}`)
+    ? `${BASE_API_URL}/api/verify/${me.blockchainId}`
     : "";
 
   return (
