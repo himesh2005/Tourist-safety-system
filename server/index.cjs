@@ -963,9 +963,69 @@ app.get("/verify-card", async (req, res) => {
   }
 });
 // ===== Scan / Verify Page =====
-app.get("/scan/:blockchainId", (req, res) => {
-  const { blockchainId } = req.params;
-  res.send(`
+app.get("/scan/:blockchainId", async (req, res) => {
+  try {
+    const { blockchainId } = req.params;
+
+    const profile = profiles.get(blockchainId);
+    if (!profile) {
+      return res.status(404).send(`
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Traveller Safety — Verify</title>
+  <style>
+    body{font-family:Arial; max-width:720px; margin:40px auto; padding:0 16px;}
+    .card{border:1px solid #ddd; border-radius:12px; padding:16px; margin-bottom:16px;}
+    .bad{color:red;font-weight:bold}
+    code{background:#f5f5f5;padding:2px 6px;border-radius:6px; word-break:break-all}
+  </style>
+</head>
+<body>
+  <h2>Traveller Safety — Verify</h2>
+  <div class="card">
+    <p class="bad"><b>Profile not found</b></p>
+    <p><b>ID:</b> <code>${escapeHtml(blockchainId)}</code></p>
+  </div>
+</body>
+</html>
+      `);
+    }
+
+    const localHash = sha256Hex(JSON.stringify(profile));
+
+    let onChainHash = null;
+    let onChainAvailable = true;
+    let onChainError = "";
+
+    try {
+      const record = await contract.getRecord(blockchainId);
+      onChainHash = record?.[0] || null;
+    } catch (err) {
+      onChainAvailable = false;
+      onChainError = String(
+        err?.shortMessage || err?.reason || err?.message || err,
+      );
+    }
+
+    const match =
+      Boolean(onChainHash) &&
+      localHash.toLowerCase() === String(onChainHash).toLowerCase();
+
+    const safe = {
+      blockchainId: escapeHtml(profile.blockchainId || ""),
+      name: escapeHtml(profile.name || ""),
+      bloodGroup: escapeHtml(profile.bloodGroup || ""),
+      allergies: escapeHtml(profile.allergies || "-"),
+      emergencyContacts: escapeHtml(profile.emergencyContacts || ""),
+      address: escapeHtml(profile.address || ""),
+      localHash: escapeHtml(localHash || ""),
+      onChainHash: escapeHtml(onChainHash ? String(onChainHash) : "N/A"),
+      onChainError: escapeHtml(onChainError || ""),
+    };
+
+    return res.status(200).send(`
 <!doctype html>
 <html>
 <head>
@@ -977,50 +1037,47 @@ app.get("/scan/:blockchainId", (req, res) => {
     .ok{color:green;font-weight:bold}
     .bad{color:red;font-weight:bold}
     code{background:#f5f5f5;padding:2px 6px;border-radius:6px; word-break:break-all}
+    .muted{color:#666}
   </style>
 </head>
 <body>
   <h2>Traveller Safety — Verify</h2>
-  <div id="root">Loading…</div>
 
-<script>
-(async function(){
-  const res = await fetch("/api/verify/${blockchainId}");
-  const root = document.getElementById("root");
+  <div class="card">
+    <h3>Emergency Profile</h3>
+    <p><b>ID:</b> <code>${safe.blockchainId}</code></p>
+    <p><b>Name:</b> ${safe.name}</p>
+    <p><b>Blood Group:</b> ${safe.bloodGroup}</p>
+    <p><b>Allergies:</b> ${safe.allergies}</p>
+    <p><b>Emergency Contacts:</b> ${safe.emergencyContacts}</p>
+    <p><b>Address:</b> ${safe.address}</p>
+  </div>
 
-  if(!res.ok){
-    const text = await res.text();
-    root.innerHTML = "<p>Verify failed: " + text + "</p>";
-    return;
-  }
-
-  const data = await res.json();
-  const p = data.profile;
-  const proof = data.proof;
-
-  root.innerHTML = \`
-    <div class="card">
-      <h3>Emergency Profile</h3>
-      <p><b>ID:</b> <code>\${p.blockchainId}</code></p>
-      <p><b>Name:</b> \${p.name}</p>
-      <p><b>Blood Group:</b> \${p.bloodGroup}</p>
-      <p><b>Allergies:</b> \${p.allergies || "-"}</p>
-      <p><b>Emergency Contacts:</b> \${p.emergencyContacts}</p>
-      <p><b>Address:</b> \${p.address}</p>
-    </div>
-
-    <div class="card">
-      <h3>Blockchain Proof</h3>
-      <p>Status: \${proof.match ? "<span class='ok'>VALID</span>" : "<span class='bad'>NOT MATCHING</span>"}</p>
-      <p><b>Local Hash:</b> <code>\${proof.localHash}</code></p>
-      <p><b>On-chain Hash:</b> <code>\${proof.onChainHash}</code></p>
-    </div>
-  \`;
-})();
-</script>
+  <div class="card">
+    <h3>Blockchain Proof</h3>
+    <p>Status: ${match ? "<span class='ok'>VALID</span>" : "<span class='bad'>NOT MATCHING</span>"}</p>
+    <p><b>Local Hash:</b> <code>${safe.localHash}</code></p>
+    <p><b>On-chain Hash:</b> <code>${safe.onChainHash}</code></p>
+    ${onChainAvailable ? "" : `<p class="muted"><b>On-chain read:</b> ${safe.onChainError}</p>`}
+  </div>
 </body>
 </html>
-  `);
+    `);
+  } catch (err) {
+    return res.status(500).send(`
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Traveller Safety — Verify</title>
+</head>
+<body>
+  <h2>Traveller Safety — Verify</h2>
+  <p><b>Verify failed:</b> ${escapeHtml(String(err?.message || err || "unknown error"))}</p>
+</body>
+</html>
+    `);
+  }
 });
 
 // ===== My Card (QR after login) =====
