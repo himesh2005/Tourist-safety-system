@@ -19,14 +19,19 @@ export default function Auth() {
     setMsg("Logging in...");
 
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
+
+      const n = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await n.json();
+      if (!n.ok) {
         setMsg(data.error || "Login failed");
         setIsSubmitting(false);
         return;
