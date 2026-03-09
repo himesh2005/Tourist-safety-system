@@ -306,34 +306,40 @@ async function initBlockchain() {
 }
 
 async function resyncChainFromLocal() {
-  if (!blockchainReady || !contract) return;
-  const ids = Array.from(profiles.keys());
-  if (ids.length === 0) return;
+  try {
+    if (!blockchainReady || !contract) return;
+    const ids = Array.from(profiles.keys());
+    if (ids.length === 0) return;
 
-  console.log(`Resync: checking ${ids.length} profiles on-chain...`);
+    console.log(`Resync: checking ${ids.length} profiles on-chain...`);
 
-  for (const blockchainId of ids) {
-    const profile = profiles.get(blockchainId);
-    const localHash = sha256Hex(JSON.stringify(profile));
-
-    try {
-      // Try reading (if exists, skip)
-      await contract.getRecord(blockchainId);
-      // If getRecord works, record exists → continue
-    } catch (e) {
-      // If reverted "ID not found" → re-create on chain
-      const msg = String(e?.shortMessage || e?.reason || e?.message || "");
-      if (msg.includes("ID not found") || msg.includes("CALL_EXCEPTION")) {
-        console.log("Resync: writing missing ID:", blockchainId);
-        const tx = await contract.createId(blockchainId, localHash);
-        await tx.wait();
-      } else {
-        console.log("Resync: unexpected error for", blockchainId, msg);
+    for (const blockchainId of ids) {
+      try {
+        await contract.getRecord(blockchainId);
+      } catch (e) {
+        const msg = String(e?.shortMessage || e?.reason || e?.message || "");
+        if (msg.includes("ID not found") || msg.includes("CALL_EXCEPTION")) {
+          console.warn(
+            "Resync warning: profile missing on-chain (read-only mode, skipping write):",
+            blockchainId,
+          );
+        } else {
+          console.warn(
+            "Resync warning: on-chain read failed for",
+            blockchainId,
+            msg,
+          );
+        }
       }
     }
-  }
 
-  console.log("Resync complete ✅");
+    console.log("Resync complete ✅ (read-only)");
+  } catch (err) {
+    console.warn(
+      "Resync skipped due to unexpected error (non-fatal):",
+      err?.message || String(err),
+    );
+  }
 }
 
 function buildSignableQrProfile(input) {
