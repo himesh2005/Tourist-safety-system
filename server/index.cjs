@@ -16,7 +16,19 @@ const geofenceRoutes = require("./routes/geofence.cjs");
 const emergencyRoutes = require("./routes/emergency.cjs");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://tourist-safery-system-gfljq41v1.vercel.app",
+      "https://tourist-safery-git-4cc369-himeshchakrapani6-gmailcoms-projects.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
+app.options("*", cors());
 app.use(express.json());
 app.use("/", geofenceRoutes);
 app.use("/", emergencyRoutes);
@@ -700,12 +712,10 @@ app.post("/verify-signature", async (req, res) => {
   try {
     const { profile, signature, publicKey } = req.body || {};
     if (!profile || !signature || !publicKey) {
-      return res
-        .status(400)
-        .json({
-          valid: false,
-          error: "profile, signature and publicKey are required",
-        });
+      return res.status(400).json({
+        valid: false,
+        error: "profile, signature and publicKey are required",
+      });
     }
 
     const valid = await verifyProfile(profile, signature, publicKey);
