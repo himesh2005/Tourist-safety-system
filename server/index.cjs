@@ -15,6 +15,8 @@ const { appendVerificationLog } = require("./utils/verificationLogger.cjs");
 const geofenceRoutes = require("./routes/geofence.cjs");
 const emergencyRoutes = require("./routes/emergency.cjs");
 
+let blockchainReady = false;
+
 const app = express();
 app.use(
   cors({
@@ -270,11 +272,24 @@ async function getIssuerWallet() {
 }
 
 async function initBlockchain() {
-  wallet = await getIssuerWallet();
-  contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+  try {
+    wallet = await getIssuerWallet();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+    blockchainReady = true;
+  } catch (err) {
+    console.warn(
+      "Blockchain init failed (insufficient funds or RPC error):",
+      err.message,
+    );
+    console.warn(
+      "Server will run in LOCAL-ONLY mode - blockchain features disabled",
+    );
+    blockchainReady = false;
+  }
 }
 
 async function resyncChainFromLocal() {
+  if (!blockchainReady || !contract) return;
   const ids = Array.from(profiles.keys());
   if (ids.length === 0) return;
 
@@ -670,16 +685,16 @@ app.post("/auth/register", async (req, res) => {
     let chainWriteError = "";
 
     try {
+      if (!contract) throw new Error("Contract not initialized");
       const tx = await contract.createId(blockchainId, profileHash);
       const receipt = await tx.wait();
       txHash = receipt?.hash || null;
-    } catch (chainErr) {
+      blockchainReady = true;
+    } catch (err) {
+      console.warn("Chain write skipped:", err.message);
       chainWriteStatus = "failed";
       chainWriteError = String(
-        chainErr?.shortMessage ||
-          chainErr?.reason ||
-          chainErr?.message ||
-          chainErr,
+        err?.shortMessage || err?.reason || err?.message || err,
       );
       console.log("REGISTER CHAIN WRITE FAILED:", chainWriteError);
     }
@@ -1136,12 +1151,14 @@ app.get("/my-card", authMiddleware, async (req, res) => {
 (async function start() {
   try {
     await initBlockchain();
-    await resyncChainFromLocal(); // ✅ ADD THIS LINE
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on LAN at ${BASE_URL}`);
-    });
+    if (blockchainReady) {
+      await resyncChainFromLocal(); // ✅ ADD THIS LINE
+    }
   } catch (e) {
-    console.error("Startup failed:", e);
-    process.exit(1);
+    console.warn("Startup initialization warning:", e?.message || String(e));
   }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on LAN at ${BASE_URL}`);
+  });
 })();
