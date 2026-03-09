@@ -5,6 +5,7 @@ import Banner from "./Banner.jsx";
 import ZonePopup from "./ZonePopup.jsx";
 import EmergencySidebar from "./EmergencyServices/EmergencySidebar.tsx";
 import { useNearestEmergencyService } from "./EmergencyServices/useNearestEmergencyService.ts";
+import { toApiUrl } from "../config/env.js";
 
 const NAGPUR_CENTER = [21.1458, 79.0882];
 const DEMO_LOCATION = [21.1445, 79.091];
@@ -30,8 +31,7 @@ function isPointInPolygon(point, polygon) {
     const xj = polygon[j][1];
 
     const intersects =
-      yi > y !== yj > y &&
-      x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi;
+      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi || 1e-12) + xi;
 
     if (intersects) inside = !inside;
   }
@@ -54,31 +54,39 @@ function normalizeZones(data) {
       return false;
     }
 
-    if (zone.riskLevel !== "low" && zone.riskLevel !== "medium" && zone.riskLevel !== "high") {
+    if (
+      zone.riskLevel !== "low" &&
+      zone.riskLevel !== "medium" &&
+      zone.riskLevel !== "high"
+    ) {
       return false;
     }
 
     const crimeIndex = Number(zone.crimeIndex);
-    if (!Number.isFinite(crimeIndex) || crimeIndex < 0 || crimeIndex > 10) return false;
+    if (!Number.isFinite(crimeIndex) || crimeIndex < 0 || crimeIndex > 10)
+      return false;
 
     if (zone.active !== "always" && zone.active !== "time_based") return false;
 
     if (zone.active === "time_based") {
-      if (!zone.activeHours || typeof zone.activeHours !== "object") return false;
+      if (!zone.activeHours || typeof zone.activeHours !== "object")
+        return false;
       const start = Number(zone.activeHours.start);
       const end = Number(zone.activeHours.end);
       if (!Number.isInteger(start) || !Number.isInteger(end)) return false;
-      if (start < 0 || start > 23 || end < 0 || end > 24 || start === end) return false;
+      if (start < 0 || start > 23 || end < 0 || end > 24 || start === end)
+        return false;
     }
 
-    if (!Array.isArray(zone.coordinates) || zone.coordinates.length < 3) return false;
+    if (!Array.isArray(zone.coordinates) || zone.coordinates.length < 3)
+      return false;
 
     return zone.coordinates.every(
       (pair) =>
         Array.isArray(pair) &&
         pair.length === 2 &&
         Number.isFinite(Number(pair[0])) &&
-        Number.isFinite(Number(pair[1]))
+        Number.isFinite(Number(pair[1])),
     );
   });
 }
@@ -96,7 +104,11 @@ function squaredDistance(a, b) {
 }
 
 function getDemoAlertIntervalMs() {
-  const value = Number(typeof localStorage !== "undefined" ? localStorage.getItem("demoAlertIntervalMs") : 0);
+  const value = Number(
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("demoAlertIntervalMs")
+      : 0,
+  );
   if (Number.isFinite(value) && value >= 30000) return value;
   return 300000;
 }
@@ -113,7 +125,10 @@ export default function GeofenceMap() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedZone, setSelectedZone] = useState(null);
   const [dismissedZoneId, setDismissedZoneId] = useState("");
-  const [emergencyInfo, setEmergencyInfo] = useState({ hospitals: [], police_stations: [] });
+  const [emergencyInfo, setEmergencyInfo] = useState({
+    hospitals: [],
+    police_stations: [],
+  });
   const [emergencyLoading, setEmergencyLoading] = useState(false);
   const [emergencyError, setEmergencyError] = useState("");
   const [showEmergencySidebar, setShowEmergencySidebar] = useState(false);
@@ -131,7 +146,7 @@ export default function GeofenceMap() {
     userPosition,
     emergencyInfo.hospitals,
     emergencyInfo.police_stations,
-    selectedCity === "nagpur-demo"
+    selectedCity === "nagpur-demo",
   );
 
   function getCurrentHour() {
@@ -143,9 +158,13 @@ export default function GeofenceMap() {
     const key = String(selectedCity || "").toLowerCase();
     if (EMERGENCY_CITY_BY_KEY[key]) return EMERGENCY_CITY_BY_KEY[key];
 
-    const cityEntry = cities.find((entry) => String(entry.key || "").toLowerCase() === key);
+    const cityEntry = cities.find(
+      (entry) => String(entry.key || "").toLowerCase() === key,
+    );
     if (!cityEntry?.city) return "";
-    const cleaned = String(cityEntry.city).replace(/\s*\(.*\)\s*$/, "").trim();
+    const cleaned = String(cityEntry.city)
+      .replace(/\s*\(.*\)\s*$/, "")
+      .trim();
     return cleaned;
   }
 
@@ -184,7 +203,8 @@ export default function GeofenceMap() {
       const previousZoneId = activeZoneRef.current?.id || null;
       const now = Date.now();
       const canRepeatAlert =
-        !lastAlertTimeRef.current || now - lastAlertTimeRef.current > ALERT_INTERVAL_MS;
+        !lastAlertTimeRef.current ||
+        now - lastAlertTimeRef.current > ALERT_INTERVAL_MS;
 
       setActiveZone(matchedZone);
       activeZoneRef.current = matchedZone;
@@ -209,7 +229,10 @@ export default function GeofenceMap() {
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return undefined;
 
-    const map = L.map(mapContainerRef.current, { zoomAnimation: true }).setView(NAGPUR_CENTER, 12);
+    const map = L.map(mapContainerRef.current, { zoomAnimation: true }).setView(
+      NAGPUR_CENTER,
+      12,
+    );
     mapRef.current = map;
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -254,7 +277,9 @@ export default function GeofenceMap() {
 
     async function loadCities() {
       try {
-        const response = await fetch("/api/cities", { cache: "no-store" });
+        const response = await fetch(toApiUrl("/api/cities"), {
+          cache: "no-store",
+        });
         if (!response.ok) throw new Error("Cities fetch failed");
         const data = await response.json();
         if (cancelled) return;
@@ -263,14 +288,32 @@ export default function GeofenceMap() {
         const hasDemo = data.some((city) => city.key === "nagpur-demo");
         const finalCities = hasDemo
           ? data
-          : [...data, { key: "nagpur-demo", city: "Nagpur (Demo Alert Mode)", center: NAGPUR_CENTER, zoneCount: 3 }];
+          : [
+              ...data,
+              {
+                key: "nagpur-demo",
+                city: "Nagpur (Demo Alert Mode)",
+                center: NAGPUR_CENTER,
+                zoneCount: 3,
+              },
+            ];
 
         setCities(finalCities);
       } catch {
         if (!cancelled) {
           setCities([
-            { key: "nagpur", city: "Nagpur", center: NAGPUR_CENTER, zoneCount: 0 },
-            { key: "nagpur-demo", city: "Nagpur (Demo Alert Mode)", center: NAGPUR_CENTER, zoneCount: 3 },
+            {
+              key: "nagpur",
+              city: "Nagpur",
+              center: NAGPUR_CENTER,
+              zoneCount: 0,
+            },
+            {
+              key: "nagpur-demo",
+              city: "Nagpur (Demo Alert Mode)",
+              center: NAGPUR_CENTER,
+              zoneCount: 3,
+            },
           ]);
         }
       }
@@ -287,7 +330,10 @@ export default function GeofenceMap() {
 
     async function loadZones() {
       try {
-        const response = await fetch(`/api/zones/${encodeURIComponent(selectedCity)}`, { cache: "no-store" });
+        const response = await fetch(
+          toApiUrl(`/api/zones/${encodeURIComponent(selectedCity)}`),
+          { cache: "no-store" },
+        );
         if (!response.ok) throw new Error("Zones fetch failed");
 
         const data = await response.json();
@@ -323,7 +369,9 @@ export default function GeofenceMap() {
     if (!mapRef.current || cities.length === 0) return;
     const city = cities.find((entry) => entry.key === selectedCity);
     if (!city || !Array.isArray(city.center)) return;
-    mapRef.current.setView(city.center, isDemoMode ? 14 : 12, { animate: true });
+    mapRef.current.setView(city.center, isDemoMode ? 14 : 12, {
+      animate: true,
+    });
   }, [selectedCity, cities, isDemoMode]);
 
   useEffect(() => {
@@ -335,7 +383,11 @@ export default function GeofenceMap() {
       if (zone.type === "time_based" && !isZoneActive(zone)) return;
 
       const color = getZoneColor(zone.type);
-      const polygon = L.polygon(zone.coordinates, { color, weight: 2, fillOpacity: 0.2 });
+      const polygon = L.polygon(zone.coordinates, {
+        color,
+        weight: 2,
+        fillOpacity: 0.2,
+      });
       polygon.on("click", (event) => {
         if (event?.originalEvent) {
           L.DomEvent.stopPropagation(event.originalEvent);
@@ -377,7 +429,9 @@ export default function GeofenceMap() {
     }
 
     if (!("geolocation" in navigator)) {
-      setErrorMessage((prev) => prev || "Geolocation is not supported on this device.");
+      setErrorMessage(
+        (prev) => prev || "Geolocation is not supported on this device.",
+      );
       return undefined;
     }
 
@@ -388,12 +442,16 @@ export default function GeofenceMap() {
 
       setUserPosition([lat, lng]);
       setErrorMessage((prev) =>
-        prev === "Location permission denied. Enable location access to track geofence alerts." ? "" : prev
+        prev ===
+        "Location permission denied. Enable location access to track geofence alerts."
+          ? ""
+          : prev,
       );
 
       if (!userPickedCityRef.current && cities.length > 0) {
         const nearest = cities.reduce((best, city) => {
-          if (!Array.isArray(city.center) || city.key === "nagpur-demo") return best;
+          if (!Array.isArray(city.center) || city.key === "nagpur-demo")
+            return best;
           const dist = squaredDistance([lat, lng], city.center);
           if (!best || dist < best.dist) return { key: city.key, dist };
           return best;
@@ -421,7 +479,9 @@ export default function GeofenceMap() {
 
     const onError = (error) => {
       if (error?.code === 1) {
-        setErrorMessage("Location permission denied. Enable location access to track geofence alerts.");
+        setErrorMessage(
+          "Location permission denied. Enable location access to track geofence alerts.",
+        );
       } else if (error?.code === 2) {
         setErrorMessage("Location unavailable.");
       } else if (error?.code === 3) {
@@ -437,11 +497,15 @@ export default function GeofenceMap() {
       setDismissedZoneId("");
     };
 
-    watcherIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      maximumAge: 10000,
-      timeout: 5000,
-    });
+    watcherIdRef.current = navigator.geolocation.watchPosition(
+      onSuccess,
+      onError,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 5000,
+      },
+    );
 
     return () => {
       if (watcherIdRef.current !== null) {
@@ -479,7 +543,7 @@ export default function GeofenceMap() {
       try {
         const [lat, lng] = userPosition;
         const url =
-          `/api/emergency?city=${encodeURIComponent(cityName)}` +
+          `${toApiUrl("/api/emergency")}?city=${encodeURIComponent(cityName)}` +
           `&lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`;
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) throw new Error("Emergency API failed");
@@ -489,7 +553,9 @@ export default function GeofenceMap() {
 
         setEmergencyInfo({
           hospitals: Array.isArray(payload?.hospitals) ? payload.hospitals : [],
-          police_stations: Array.isArray(payload?.police_stations) ? payload.police_stations : [],
+          police_stations: Array.isArray(payload?.police_stations)
+            ? payload.police_stations
+            : [],
         });
       } catch {
         if (!cancelled) {
@@ -526,20 +592,40 @@ export default function GeofenceMap() {
     });
 
     emergencyInfo.hospitals.forEach((item) => {
-      if (!Number.isFinite(Number(item?.latitude)) || !Number.isFinite(Number(item?.longitude))) return;
+      if (
+        !Number.isFinite(Number(item?.latitude)) ||
+        !Number.isFinite(Number(item?.longitude))
+      )
+        return;
       const tooltipHtml = `<b>${item.name}</b><br/>${item.address || "Address unavailable"}<br/>${item.phone || "Contact unavailable"}`;
-      L.marker([Number(item.latitude), Number(item.longitude)], { icon: hospitalIcon })
+      L.marker([Number(item.latitude), Number(item.longitude)], {
+        icon: hospitalIcon,
+      })
         .bindPopup(tooltipHtml)
-        .bindTooltip(tooltipHtml, { direction: "top", sticky: true, opacity: 0.95 })
+        .bindTooltip(tooltipHtml, {
+          direction: "top",
+          sticky: true,
+          opacity: 0.95,
+        })
         .addTo(emergencyLayerGroupRef.current);
     });
 
     emergencyInfo.police_stations.forEach((item) => {
-      if (!Number.isFinite(Number(item?.latitude)) || !Number.isFinite(Number(item?.longitude))) return;
+      if (
+        !Number.isFinite(Number(item?.latitude)) ||
+        !Number.isFinite(Number(item?.longitude))
+      )
+        return;
       const tooltipHtml = `<b>${item.name}</b><br/>${item.address || "Address unavailable"}<br/>${item.phone || "Contact unavailable"}`;
-      L.marker([Number(item.latitude), Number(item.longitude)], { icon: policeIcon })
+      L.marker([Number(item.latitude), Number(item.longitude)], {
+        icon: policeIcon,
+      })
         .bindPopup(tooltipHtml)
-        .bindTooltip(tooltipHtml, { direction: "top", sticky: true, opacity: 0.95 })
+        .bindTooltip(tooltipHtml, {
+          direction: "top",
+          sticky: true,
+          opacity: 0.95,
+        })
         .addTo(emergencyLayerGroupRef.current);
     });
   }, [emergencyInfo]);
@@ -557,7 +643,10 @@ export default function GeofenceMap() {
     h(Banner, {
       statusType,
       details: statusDetails,
-      onDismiss: activeZone && !isDemoMode ? () => setDismissedZoneId(activeZone.id) : undefined,
+      onDismiss:
+        activeZone && !isDemoMode
+          ? () => setDismissedZoneId(activeZone.id)
+          : undefined,
       demoMode: isDemoMode,
       zoneName: activeZone?.name || "",
     });
@@ -570,7 +659,15 @@ export default function GeofenceMap() {
 
   const cityOptions = cities.some((city) => city.key === "nagpur-demo")
     ? cities
-    : [...cities, { key: "nagpur-demo", city: "Nagpur (Demo Alert Mode)", center: NAGPUR_CENTER, zoneCount: 3 }];
+    : [
+        ...cities,
+        {
+          key: "nagpur-demo",
+          city: "Nagpur (Demo Alert Mode)",
+          center: NAGPUR_CENTER,
+          zoneCount: 3,
+        },
+      ];
 
   const liveText = userPosition
     ? `Live location: ${userPosition[0].toFixed(5)}, ${userPosition[1].toFixed(5)}${isDemoMode ? " (simulated)" : ""}`
@@ -579,7 +676,11 @@ export default function GeofenceMap() {
 
   return h("div", { style: { position: "relative" } }, [
     h("div", { key: "city-row", className: "city-toolbar" }, [
-      h("label", { key: "label", className: "city-label", htmlFor: "citySelect" }, "City"),
+      h(
+        "label",
+        { key: "label", className: "city-label", htmlFor: "citySelect" },
+        "City",
+      ),
       h(
         "select",
         {
@@ -593,11 +694,12 @@ export default function GeofenceMap() {
           },
         },
         cityOptions.map((city) => {
-          const optionLabel = city.key === "nagpur-demo"
-            ? "Nagpur (Demo Alert Mode)"
-            : `${city.city} (${city.zoneCount})`;
+          const optionLabel =
+            city.key === "nagpur-demo"
+              ? "Nagpur (Demo Alert Mode)"
+              : `${city.city} (${city.zoneCount})`;
           return h("option", { key: city.key, value: city.key }, optionLabel);
-        })
+        }),
       ),
       isDemoMode
         ? h(
@@ -612,19 +714,32 @@ export default function GeofenceMap() {
                 setDismissedZoneId("");
               },
             },
-            "Exit Demo Mode"
+            "Exit Demo Mode",
           )
         : null,
     ]),
     isDemoMode
       ? h("div", { key: "demo-badge-row", className: "demo-badge-row" }, [
-          h("div", { key: "demo-badge", className: "demo-badge" }, "\u{1F534} DEMO ALERT SIMULATION ACTIVE"),
+          h(
+            "div",
+            { key: "demo-badge", className: "demo-badge" },
+            "\u{1F534} DEMO ALERT SIMULATION ACTIVE",
+          ),
         ])
       : null,
     h(
       AnimatePresence,
       { key: "banner-presence", mode: "wait" },
-      h(motion.div, { key: statusType + String(isDemoMode), initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }, warningNode)
+      h(
+        motion.div,
+        {
+          key: statusType + String(isDemoMode),
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0 },
+        },
+        warningNode,
+      ),
     ),
     h("div", { key: "geo-layout", className: "geo-layout" }, [
       h("div", { key: "map-shell", className: "geo-shell" }, [
@@ -639,7 +754,7 @@ export default function GeofenceMap() {
             className: "pill-btn emergency-map-toggle",
             onClick: () => setShowEmergencySidebar((v) => !v),
           },
-          showEmergencySidebar ? "Hide Nearby Services" : "Nearby Services"
+          showEmergencySidebar ? "Hide Nearby Services" : "Nearby Services",
         ),
         h(EmergencySidebar, {
           key: "emergency-sidebar-mobile",
@@ -662,7 +777,7 @@ export default function GeofenceMap() {
                 zone: selectedZone,
                 onClose: () => setSelectedZone(null),
               })
-            : null
+            : null,
         ),
       ]),
       h(EmergencySidebar, {
@@ -678,10 +793,16 @@ export default function GeofenceMap() {
         nearestPolice: nearestServices.nearestPolice,
       }),
     ]),
-    errorMessage ? h("p", { key: "error", className: "geo-meta" }, errorMessage) : null,
+    errorMessage
+      ? h("p", { key: "error", className: "geo-meta" }, errorMessage)
+      : null,
     h("p", { key: "live", className: "geo-meta" }, liveText),
     activeZone && lastAlertTime
-      ? h("p", { key: "last", className: "geo-meta" }, `Last warning update: ${new Date(lastAlertTime).toLocaleTimeString()}${isDemoMode ? " (demo repeat)" : ""}`)
+      ? h(
+          "p",
+          { key: "last", className: "geo-meta" },
+          `Last warning update: ${new Date(lastAlertTime).toLocaleTimeString()}${isDemoMode ? " (demo repeat)" : ""}`,
+        )
       : null,
   ]);
 }

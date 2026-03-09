@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { toApiUrl } from "../config/env.js";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const usernameRegex = /^[A-Za-z0-9]{4,}$/;
@@ -42,7 +43,7 @@ export default function Register() {
     const timer = setTimeout(async () => {
       try {
         setCheckingUsername(true);
-        const res = await fetch("/api/check-username", {
+        const res = await fetch(toApiUrl("/api/check-username"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username }),
@@ -69,7 +70,8 @@ export default function Register() {
       .filter(Boolean);
 
     if (!usernameRegex.test(username)) {
-      next.username = "Username must be alphanumeric, no spaces, minimum 4 characters.";
+      next.username =
+        "Username must be alphanumeric, no spaces, minimum 4 characters.";
     } else if (usernameAvailable === false) {
       next.username = "Username already exists.";
     }
@@ -88,7 +90,8 @@ export default function Register() {
     }
 
     if (contacts.length === 0 || contacts.some((c) => !mobileRegex.test(c))) {
-      next.emergencyContacts = "Enter comma-separated 10-digit emergency contact numbers.";
+      next.emergencyContacts =
+        "Enter comma-separated 10-digit emergency contact numbers.";
     }
 
     if (address.length < 10) {
@@ -116,7 +119,7 @@ export default function Register() {
     setMsg("Creating account...");
 
     try {
-      const res = await fetch("/auth/register", {
+      const res = await fetch(toApiUrl("/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -148,7 +151,9 @@ export default function Register() {
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
         <h2 className="auth-title">Create Account</h2>
-        <p className="auth-subtitle">Register once to get your blockchain safety card.</p>
+        <p className="auth-subtitle">
+          Register once to get your blockchain safety card.
+        </p>
 
         <div className="auth-form">
           <Field
@@ -173,17 +178,28 @@ export default function Register() {
             error={errors.password}
             helper="Use upper/lowercase, number and one special character."
             toggle={
-              <button type="button" className="field-toggle" onClick={() => setShowPassword((v) => !v)}>
+              <button
+                type="button"
+                className="field-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+              >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
             }
           />
 
-          <Field label="Full Name" value={form.name} onChange={(v) => set("name", v)} error={errors.name} />
+          <Field
+            label="Full Name"
+            value={form.name}
+            onChange={(v) => set("name", v)}
+            error={errors.name}
+          />
           <Field
             label="Mobile Number"
             value={form.mobile}
-            onChange={(v) => set("mobile", v.replace(/[^\d]/g, "").slice(0, 10))}
+            onChange={(v) =>
+              set("mobile", v.replace(/[^\d]/g, "").slice(0, 10))
+            }
             error={errors.mobile}
             helper="10 digits only."
           />
@@ -201,11 +217,17 @@ export default function Register() {
                 </option>
               ))}
             </select>
-            <label className="field-label floating-label-active">Blood Group</label>
+            <label className="field-label floating-label-active">
+              Blood Group
+            </label>
             <FieldError text={errors.bloodGroup} />
           </div>
 
-          <Field label="Allergies (Optional)" value={form.allergies} onChange={(v) => set("allergies", v)} />
+          <Field
+            label="Allergies (Optional)"
+            value={form.allergies}
+            onChange={(v) => set("allergies", v)}
+          />
           <Field
             label="Emergency Contacts"
             value={form.emergencyContacts}
@@ -223,7 +245,12 @@ export default function Register() {
         </div>
 
         <div className="auth-actions">
-          <motion.button whileHover={{ scale: 1.02 }} type="submit" className="pill-btn" disabled={isSubmitting}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            type="submit"
+            className="pill-btn"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Creating..." : "Create Account"}
           </motion.button>
           <Link to="/auth">Back to login</Link>
@@ -245,7 +272,15 @@ export default function Register() {
   );
 }
 
-function Field({ label, value, onChange, type = "text", error, helper, toggle }) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  error,
+  helper,
+  toggle,
+}) {
   return (
     <div className="field-wrap">
       <input

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { toApiUrl } from "../config/env.js";
 
 export default function Auth() {
   const nav = useNavigate();
@@ -18,7 +19,7 @@ export default function Auth() {
     setMsg("Logging in...");
 
     try {
-      const res = await fetch("/auth/login", {
+      const res = await fetch(toApiUrl("/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -51,7 +52,9 @@ export default function Auth() {
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
         <h2 className="auth-title">Tourist Safety System</h2>
-        <p className="auth-subtitle">Sign in to access your live geofence dashboard.</p>
+        <p className="auth-subtitle">
+          Sign in to access your live geofence dashboard.
+        </p>
 
         <div className="auth-form">
           <div className="field-wrap">
@@ -76,15 +79,26 @@ export default function Auth() {
               autoComplete="current-password"
             />
             <label className="field-label">Password</label>
-            <button type="button" className="field-toggle" onClick={() => setShowPassword((v) => !v)}>
+            <button
+              type="button"
+              className="field-toggle"
+              onClick={() => setShowPassword((v) => !v)}
+            >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
-            <small className="field-help">Never share your password with anyone.</small>
+            <small className="field-help">
+              Never share your password with anyone.
+            </small>
           </div>
         </div>
 
         <div className="auth-actions">
-          <motion.button whileHover={{ scale: 1.02 }} type="submit" className="pill-btn" disabled={isSubmitting}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            type="submit"
+            className="pill-btn"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Signing in..." : "Login"}
           </motion.button>
           <Link to="/register">Create account</Link>

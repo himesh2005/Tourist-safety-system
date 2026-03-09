@@ -1,14 +1,30 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const API_TARGET = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+).replace(/\/+$/, "");
+
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/auth": "http://localhost:5000",
-      "/api": "http://localhost:5000",
-      "/me": "http://localhost:5000",
-      "/my-card": "http://localhost:5000", 
+      "/auth": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
+      "/api": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
+      "/me": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
+      "/my-card": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
     },
   },
 });

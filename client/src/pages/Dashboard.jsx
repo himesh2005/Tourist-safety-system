@@ -5,6 +5,7 @@ import { FaQrcode } from "react-icons/fa6";
 import { FiChevronDown, FiCopy, FiLogOut, FiShield } from "react-icons/fi";
 import AreaIntelligencePanel from "../components/AreaIntelligencePanel.jsx";
 import GeofenceMap from "../components/GeofenceMap";
+import { toApiUrl } from "../config/env.js";
 
 export default function Dashboard() {
   const nav = useNavigate();
@@ -18,13 +19,15 @@ export default function Dashboard() {
     const token = localStorage.getItem("token");
     if (!token) return nav("/auth");
 
-    fetch("/me", { headers: { Authorization: "Bearer " + token } })
+    fetch(toApiUrl("/me"), { headers: { Authorization: "Bearer " + token } })
       .then((r) => r.json())
       .then((d) => setMe(d))
       .catch(() => nav("/auth"));
 
     setMsg("Loading your QR...");
-    fetch("/my-card", { headers: { Authorization: "Bearer " + token } })
+    fetch(toApiUrl("/my-card"), {
+      headers: { Authorization: "Bearer " + token },
+    })
       .then((r) => r.json())
       .then((d) => {
         if (d.error) {
@@ -50,7 +53,9 @@ export default function Dashboard() {
     }
   }
 
-  const verifyApiLink = me?.blockchainId ? `http://localhost:5000/api/verify/${me.blockchainId}` : "";
+  const verifyApiLink = me?.blockchainId
+    ? toApiUrl(`/api/verify/${me.blockchainId}`)
+    : "";
 
   return (
     <div className="dashboard-screen page-container">
@@ -66,11 +71,18 @@ export default function Dashboard() {
         </div>
 
         <div className="nav-right">
-          <button className="pill-btn icon-btn" onClick={() => setDrawerOpen(true)} aria-label="Open QR panel">
+          <button
+            className="pill-btn icon-btn"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open QR panel"
+          >
             <FaQrcode />
           </button>
           <div className="profile-menu-wrap">
-            <button className="pill-btn profile-trigger" onClick={() => setProfileOpen((v) => !v)}>
+            <button
+              className="pill-btn profile-trigger"
+              onClick={() => setProfileOpen((v) => !v)}
+            >
               {me?.username || "Profile"} <FiChevronDown />
             </button>
             <AnimatePresence>
@@ -81,10 +93,16 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                 >
-                  <button className="menu-item" onClick={() => copyText(me?.blockchainId || "")}>
+                  <button
+                    className="menu-item"
+                    onClick={() => copyText(me?.blockchainId || "")}
+                  >
                     <FiCopy /> Copy Blockchain ID
                   </button>
-                  <button className="menu-item" onClick={() => setDrawerOpen(true)}>
+                  <button
+                    className="menu-item"
+                    onClick={() => setDrawerOpen(true)}
+                  >
                     <FaQrcode /> View QR
                   </button>
                   <button className="menu-item" onClick={logout}>
@@ -126,7 +144,10 @@ export default function Dashboard() {
               </div>
               <div className="risk-item">
                 <h4>Live Advisory</h4>
-                <p>Use the map and zone status banner for real-time movement safety guidance.</p>
+                <p>
+                  Use the map and zone status banner for real-time movement
+                  safety guidance.
+                </p>
               </div>
             </div>
           </section>
@@ -175,15 +196,27 @@ export default function Dashboard() {
                   <img src={card.qrDataUrl} alt="QR" className="qr-image" />
 
                   <div className="copy-row">
-                    <button className="pill-btn" onClick={() => copyText(me?.blockchainId || "")}>
+                    <button
+                      className="pill-btn"
+                      onClick={() => copyText(me?.blockchainId || "")}
+                    >
                       <FiCopy style={{ marginRight: 6 }} />
                       Copy Blockchain ID
                     </button>
-                    <button className="pill-btn" onClick={() => copyText(card.scanUrl || "")}>
+                    <button
+                      className="pill-btn"
+                      onClick={() => copyText(card.scanUrl || "")}
+                    >
                       <FiCopy style={{ marginRight: 6 }} />
                       Copy Scan Link
                     </button>
-                    <a href={verifyApiLink} target="_blank" rel="noreferrer" className="pill-btn" style={linkBtn}>
+                    <a
+                      href={verifyApiLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="pill-btn"
+                      style={linkBtn}
+                    >
                       Verify Proof API
                     </a>
                   </div>
