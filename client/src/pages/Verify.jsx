@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { API_URL } from "../config/env.js";
-
-const BASE_API_URL = String(API_URL || "http://localhost:5000").replace(
-  /\/+$/,
-  "",
-);
 
 export default function Verify() {
   const { id } = useParams();
@@ -30,10 +24,9 @@ export default function Verify() {
       setProof(null);
 
       try {
-        const res = await fetch(
-          `${BASE_API_URL}/api/verify/${encodeURIComponent(id)}`,
-          { signal: controller.signal },
-        );
+        const res = await fetch(`/api/verify/${id}`, {
+          signal: controller.signal,
+        });
 
         const data = await res.json();
 
