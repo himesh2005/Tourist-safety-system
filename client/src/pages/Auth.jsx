@@ -44,6 +44,7 @@ export default function Auth() {
           "userProfile",
           JSON.stringify({
             id: data.blockchainId,
+            username,
             blockchainId: data.blockchainId,
             name: data.profile.name || username,
             phone: data.profile.mobile || "",

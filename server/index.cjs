@@ -217,6 +217,30 @@ function saveData() {
   );
 }
 
+async function sendSMSViaVercel(message, number) {
+  try {
+    const vercelUrl = String(
+      process.env.FRONTEND_URL ||
+        "https://tourist-safety-system-theta.vercel.app",
+    )
+      .trim()
+      .replace(/\/+$/, "");
+
+    const response = await fetch(`${vercelUrl}/api/send-sms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, number }),
+    });
+
+    const result = await response.json();
+    console.log("SMS result:", result);
+    return result;
+  } catch (err) {
+    console.error("sendSMSViaVercel error:", err.message);
+    return { success: false };
+  }
+}
+
 // ===== Contract address loading =====
 const DEPLOYED_PATH = path.join(
   __dirname,
@@ -578,6 +602,46 @@ app.get("/debug/state", (req, res) => {
   });
 });
 
+app.post("/api/user/heartbeat", authMiddleware, (req, res) => {
+  try {
+    const { username } = req.user || {};
+    const user = users.get(username);
+    if (!user) {
+      return res.json({ success: false });
+    }
+
+    const profile = profiles.get(user.blockchainId);
+    if (!profile) {
+      return res.json({ success: false });
+    }
+
+    const lat = Number(req.body?.lat);
+    const lng = Number(req.body?.lng);
+    const zoneName = String(req.body?.zoneName || "Unknown").trim();
+    const riskLevel = String(req.body?.riskLevel || "unknown")
+      .trim()
+      .toLowerCase();
+    const riskScore = Number(req.body?.riskScore || 0);
+
+    profile.lastHeartbeat = {
+      lat: Number.isFinite(lat) ? lat : null,
+      lng: Number.isFinite(lng) ? lng : null,
+      zoneName,
+      riskLevel,
+      riskScore: Number.isFinite(riskScore) ? riskScore : 0,
+      timestamp: Date.now(),
+    };
+    profile.offlineAlertSent = false;
+    profiles.set(user.blockchainId, profile);
+    saveData();
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.log("USER HEARTBEAT ERROR:", err);
+    return res.json({ success: false });
+  }
+});
+
 app.post("/api/user/last-location", authMiddleware, (req, res) => {
   try {
     const { username, id } = req.user || {};
@@ -658,6 +722,73 @@ app.post("/api/emergency/location-alert", async (req, res) => {
     });
   }
 });
+
+setInterval(async () => {
+  try {
+    const now = Date.now();
+    const offlineThreshold = 30 * 1000;
+    let didChange = false;
+
+    for (const [blockchainId, profile] of profiles.entries()) {
+      if (!profile?.lastHeartbeat) continue;
+
+      if (profile.offlineAlertSent && profile.lastOfflineAlert) {
+        const timeSinceAlert = now - Number(profile.lastOfflineAlert);
+        if (timeSinceAlert > 5 * 60 * 1000) {
+          profile.offlineAlertSent = false;
+          profiles.set(blockchainId, profile);
+          didChange = true;
+        }
+      }
+
+      if (profile.offlineAlertSent) continue;
+      if (profile.lastHeartbeat.riskLevel === "safe") continue;
+
+      const heartbeatTimestamp = Number(profile.lastHeartbeat.timestamp || 0);
+      const timeSinceHeartbeat = now - heartbeatTimestamp;
+      if (timeSinceHeartbeat < offlineThreshold) continue;
+
+      const zoneDesc =
+        profile.lastHeartbeat.riskLevel === "danger"
+          ? "DANGER ZONE — Restricted/Naxal affected area. Stay alert."
+          : "MODERATE ZONE — High crime area. Exercise caution.";
+
+      const smsMessage =
+        `Tourist Safety Alert\n` +
+        `Hi ${profile.name || "Traveler"}, you appear to be offline.\n\n` +
+        `Your last known location:\n` +
+        `Zone: ${profile.lastHeartbeat.zoneName || "Unknown"}\n` +
+        `Status: ${zoneDesc}\n` +
+        `Risk Score: ${Number(profile.lastHeartbeat.riskScore || 0)}/100\n\n` +
+        `GPS: ${Number(profile.lastHeartbeat.lat || 0).toFixed(4)}, ${Number(profile.lastHeartbeat.lng || 0).toFixed(4)}\n` +
+        `Maps: https://maps.google.com/?q=${profile.lastHeartbeat.lat},${profile.lastHeartbeat.lng}\n\n` +
+        `If you are in danger, call 112 immediately.\n` +
+        `App: Tourist Safety System`;
+
+      const userPhone = String(
+        profile.mobile || profile.phone || profile.emergencyContacts || "",
+      ).trim();
+      if (!userPhone) continue;
+
+      const smsResult = await sendSMSViaVercel(smsMessage, userPhone);
+      if (smsResult?.success === true) {
+        profile.offlineAlertSent = true;
+        profile.lastOfflineAlert = Date.now();
+        profiles.set(blockchainId, profile);
+        didChange = true;
+        console.log(
+          `Offline alert sent to ${profile.name || blockchainId} at ${userPhone}`,
+        );
+      }
+    }
+
+    if (didChange) {
+      saveData();
+    }
+  } catch (err) {
+    console.error("Heartbeat checker error:", err.message);
+  }
+}, 30000);
 
 app.get("/api/tourist-spots/:city", (req, res) => {
   try {

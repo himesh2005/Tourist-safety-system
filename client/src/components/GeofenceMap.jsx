@@ -522,6 +522,11 @@ export default function GeofenceMap({
       JSON.stringify({
         zoneName: zonePayload?.zoneName || zonePayload?.name || "",
         riskLevel: zonePayload?.riskLevel || "safe",
+        riskScore:
+          zonePayload?.riskScore ??
+          zonePayload?.crimeIndex ??
+          zonePayload?.score ??
+          0,
         lat: zonePayload?.lat ?? null,
         lng: zonePayload?.lng ?? null,
         timestamp: zonePayload?.timestamp || Date.now(),
@@ -785,6 +790,53 @@ export default function GeofenceMap({
       setSosResult(null);
     }
   }, [sosModalOpen]);
+
+  useEffect(() => {
+    let heartbeatInterval = null;
+
+    const sendHeartbeat = async () => {
+      if (!navigator.onLine) return;
+
+      const token = getAuthToken();
+      if (!token) return;
+
+      const lastZone = JSON.parse(
+        localStorage.getItem("lastKnownZone") || "{}",
+      );
+      const lastLoc = JSON.parse(
+        localStorage.getItem("lastKnownLocation") || "{}",
+      );
+
+      if (!lastLoc?.lat) return;
+
+      try {
+        await fetch(api("/api/user/heartbeat"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            lat: lastLoc.lat,
+            lng: lastLoc.lng,
+            zoneName: lastZone.zoneName || "Unknown",
+            riskLevel: lastZone.riskLevel || "unknown",
+            riskScore: lastZone.riskScore || 0,
+            timestamp: Date.now(),
+          }),
+        });
+      } catch {}
+    };
+
+    sendHeartbeat();
+    heartbeatInterval = setInterval(sendHeartbeat, 20000);
+
+    return () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
+    };
+  }, []);
 
   function isZoneActive(zone, hour = getCurrentHour()) {
     if (!zone || typeof zone !== "object") return false;
