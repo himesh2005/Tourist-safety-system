@@ -235,6 +235,117 @@ function saveData() {
   );
 }
 
+async function sendSMSViaVercel(message, number) {
+  try {
+    const vercelUrl = String(
+      process.env.FRONTEND_URL ||
+        "https://tourist-safety-system-theta.vercel.app",
+    )
+      .trim()
+      .replace(/\/+$/, "");
+
+    const response = await fetch(`${vercelUrl}/api/send-sms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, number }),
+    });
+
+    const result = await response.json();
+    console.log("Vercel SMS result:", result);
+    return result;
+  } catch (err) {
+    console.error("sendSMSViaVercel error:", err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+async function checkAllUsersOfflineStatus() {
+  const now = Date.now();
+  const threshold = 30 * 1000;
+  let didChange = false;
+
+  for (const [blockchainId, profile] of profiles.entries()) {
+    if (!profile?.lastHeartbeat) continue;
+
+    const linkedUser =
+      Array.from(users.values()).find(
+        (entry) => entry.blockchainId === blockchainId,
+      ) || null;
+
+    if (profile.offlineAlertSent && profile.lastOfflineAlert) {
+      if (now - Number(profile.lastOfflineAlert) > 5 * 60 * 1000) {
+        profile.offlineAlertSent = false;
+        profiles.set(blockchainId, profile);
+        if (linkedUser?.username) {
+          linkedUser.offlineAlertSent = false;
+          users.set(linkedUser.username, linkedUser);
+        }
+        didChange = true;
+      }
+    }
+
+    if (profile.offlineAlertSent) continue;
+
+    if (
+      profile.lastHeartbeat.riskLevel === "safe" &&
+      profile.lastHeartbeat.zoneName &&
+      profile.lastHeartbeat.zoneName !== "Unknown"
+    ) {
+      continue;
+    }
+
+    const timeSince = now - Number(profile.lastHeartbeat.timestamp || 0);
+    if (timeSince < threshold) continue;
+
+    const zoneDesc =
+      profile.lastHeartbeat.riskLevel === "danger"
+        ? "DANGER ZONE - Naxal affected. Stay alert."
+        : profile.lastHeartbeat.riskLevel === "moderate"
+          ? "MODERATE ZONE - High crime area. Be cautious."
+          : profile.lastHeartbeat.riskLevel === "safe"
+            ? "SAFE ZONE - Area is generally safe."
+            : "OUTSIDE MAPPED ZONES - Stay cautious.";
+
+    const smsMessage =
+      `Tourist Safety Alert\n` +
+      `Hi ${profile.name || linkedUser?.name || "Traveler"}, you appear to be offline.\n\n` +
+      `Last known location:\n` +
+      `Zone: ${profile.lastHeartbeat.zoneName || "Unknown"}\n` +
+      `Status: ${zoneDesc}\n\n` +
+      `GPS: ${Number(profile.lastHeartbeat.lat || 0).toFixed(4)}, ${Number(profile.lastHeartbeat.lng || 0).toFixed(4)}\n` +
+      `Maps: https://maps.google.com/?q=${profile.lastHeartbeat.lat},${profile.lastHeartbeat.lng}\n\n` +
+      `If in danger call 112 immediately.\n` +
+      `Tourist Safety System`;
+
+    const userPhone = String(
+      linkedUser?.phone ||
+        linkedUser?.emergencyContact ||
+        profile.mobile ||
+        profile.emergencyContacts ||
+        "",
+    ).trim();
+
+    if (!userPhone) continue;
+
+    const result = await sendSMSViaVercel(smsMessage, userPhone);
+    if (result?.success === true) {
+      profile.offlineAlertSent = true;
+      profile.lastOfflineAlert = Date.now();
+      profiles.set(blockchainId, profile);
+      if (linkedUser?.username) {
+        linkedUser.offlineAlertSent = true;
+        linkedUser.lastOfflineAlert = profile.lastOfflineAlert;
+        users.set(linkedUser.username, linkedUser);
+      }
+      didChange = true;
+    }
+  }
+
+  if (didChange) {
+    saveData();
+  }
+}
+
 // ===== Contract address loading =====
 const DEPLOYED_PATH = path.join(
   __dirname,
@@ -584,6 +695,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
+  checkAllUsersOfflineStatus().catch(console.error);
   res.json({ status: "ok" });
 });
 
@@ -594,6 +706,51 @@ app.get("/debug/state", (req, res) => {
     profileIds: Array.from(profiles.keys()).slice(0, 20),
     contractAddress: CONTRACT_ADDRESS,
   });
+});
+
+app.post("/api/user/heartbeat", authMiddleware, async (req, res) => {
+  try {
+    const { username } = req.user || {};
+    const user = users.get(username);
+    if (!user) {
+      return res.json({ success: false });
+    }
+
+    const profile = profiles.get(user.blockchainId);
+    if (!profile) {
+      return res.json({ success: false });
+    }
+
+    const lat = Number(req.body?.lat);
+    const lng = Number(req.body?.lng);
+    const zoneName = String(req.body?.zoneName || "Unknown").trim();
+    const riskLevel = String(req.body?.riskLevel || "unknown")
+      .trim()
+      .toLowerCase();
+    const riskScore = Number(req.body?.riskScore || 0);
+
+    profile.lastHeartbeat = {
+      lat: Number.isFinite(lat) ? lat : null,
+      lng: Number.isFinite(lng) ? lng : null,
+      zoneName,
+      riskLevel,
+      riskScore: Number.isFinite(riskScore) ? riskScore : 0,
+      timestamp: Date.now(),
+    };
+    profile.offlineAlertSent = false;
+    profiles.set(user.blockchainId, profile);
+    user.lastHeartbeat = profile.lastHeartbeat;
+    user.offlineAlertSent = false;
+    users.set(username, user);
+    saveData();
+
+    res.json({ success: true });
+    await checkAllUsersOfflineStatus();
+    return;
+  } catch (err) {
+    console.log("USER HEARTBEAT ERROR:", err);
+    return res.json({ success: false });
+  }
 });
 
 app.post("/api/user/last-location", authMiddleware, (req, res) => {
@@ -676,6 +833,12 @@ app.post("/api/emergency/location-alert", async (req, res) => {
     });
   }
 });
+
+setInterval(() => {
+  checkAllUsersOfflineStatus().catch((err) => {
+    console.error("Heartbeat checker error:", err.message);
+  });
+}, 30000);
 
 app.get("/api/tourist-spots/:city", (req, res) => {
   try {
