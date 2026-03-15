@@ -286,14 +286,6 @@ async function checkAllUsersOfflineStatus() {
 
     if (profile.offlineAlertSent) continue;
 
-    if (
-      profile.lastHeartbeat.riskLevel === "safe" &&
-      profile.lastHeartbeat.zoneName &&
-      profile.lastHeartbeat.zoneName !== "Unknown"
-    ) {
-      continue;
-    }
-
     const timeSince = now - Number(profile.lastHeartbeat.timestamp || 0);
     if (timeSince < threshold) continue;
 
