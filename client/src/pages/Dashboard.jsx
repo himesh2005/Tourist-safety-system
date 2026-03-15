@@ -28,20 +28,7 @@ export default function Dashboard() {
           nav("/auth");
           return;
         }
-        localStorage.setItem(
-          "userProfile",
-          JSON.stringify({
-            id: payload.blockchainId,
-            blockchainId: payload.blockchainId,
-            username: payload.username || "",
-            name: payload.profile?.name || payload.username || "Traveler",
-            phone: payload.profile?.mobile || "",
-            mobile: payload.profile?.mobile || "",
-            emergencyContact: payload.profile?.emergencyContacts || "",
-            emergencyContacts: payload.profile?.emergencyContacts || "",
-            address: payload.profile?.address || "",
-          }),
-        );
+        localStorage.setItem("userProfile", JSON.stringify(payload));
         setMe(payload);
       })
       .catch(() => nav("/auth"));

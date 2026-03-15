@@ -39,19 +39,32 @@ export default function Auth() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("blockchainId", data.blockchainId);
-      if (data.profile) {
+      const profileRes = await fetch(`${API_URL}/me`, {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
         localStorage.setItem(
           "userProfile",
           JSON.stringify({
-            id: data.blockchainId,
-            username,
-            blockchainId: data.blockchainId,
-            name: data.profile.name || username,
-            phone: data.profile.mobile || "",
-            mobile: data.profile.mobile || "",
-            emergencyContact: data.profile.emergencyContacts || "",
-            emergencyContacts: data.profile.emergencyContacts || "",
-            address: data.profile.address || "",
+            id: profile.id,
+            username: profile.username || username,
+            name: profile.name,
+            phone: profile.phone || profile.emergencyContact,
+            emergencyContact: profile.emergencyContact,
+            blockchainId: profile.blockchainId,
+            bloodGroup: profile.bloodGroup,
+            mobile:
+              profile.profile?.mobile ||
+              profile.phone ||
+              profile.emergencyContact ||
+              "",
+            emergencyContacts:
+              profile.profile?.emergencyContacts ||
+              profile.emergencyContact ||
+              "",
+            address: profile.profile?.address || "",
+            profile: profile.profile || null,
           }),
         );
       }
