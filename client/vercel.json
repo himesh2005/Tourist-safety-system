@@ -3,8 +3,6 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/send-sms", "destination": "/api/send-sms.js" },
-    { "source": "/api/verify/:id", "destination": "/api/verify/[id].js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

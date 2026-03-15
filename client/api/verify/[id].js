@@ -4,18 +4,16 @@ module.exports = async (req, res) => {
     process.env.VITE_API_URL ||
     "https://tourist-safety-system-production.up.railway.app";
   const https = require("https");
-  const url = `${RAILWAY_URL}/api/verify/${id}`;
-
   return new Promise((resolve) => {
     https
-      .get(url, (response) => {
+      .get(`${RAILWAY_URL}/api/verify/${id}`, (response) => {
         let data = "";
         response.on("data", (c) => (data += c));
         response.on("end", () => {
           try {
             res.status(200).json(JSON.parse(data));
           } catch (e) {
-            res.status(500).json({ error: "Parse error", raw: data });
+            res.status(500).json({ error: "parse error" });
           }
           resolve();
         });
