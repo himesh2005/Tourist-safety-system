@@ -467,6 +467,8 @@ export default function GeofenceMap({
   const locationDisabledTimerRef = useRef(null);
   const lastSavedLocationAtRef = useRef(0);
   const bannerTimeoutRef = useRef(null);
+  const offlineTimerRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
 
   const nearestHospitals = useMemo(
     () => getNearestEntries(userPosition, emergencyInfo.hospitals, 3),
@@ -514,6 +516,58 @@ export default function GeofenceMap({
 
   function showSOSResult(type, message) {
     setSosResult({ type, message });
+  }
+
+  function showOfflineBanner() {
+    let banner = document.getElementById("offline-banner");
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "offline-banner";
+      banner.style.cssText = `
+        position: fixed;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #E65100;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 99px;
+        z-index: 3000;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        white-space: nowrap;
+      `;
+      document.body.appendChild(banner);
+    }
+    banner.style.display = "block";
+    banner.textContent = "📵 No internet — sending location alert in 30s";
+    banner.style.background = "#E65100";
+  }
+
+  function updateOfflineBanner(seconds) {
+    const banner = document.getElementById("offline-banner");
+    if (!banner) return;
+
+    if (seconds < 0) {
+      banner.textContent = "✅ Location alert sent!";
+      banner.style.background = "#2E7D32";
+      setTimeout(() => hideOfflineBanner(), 4000);
+      return;
+    }
+
+    if (seconds > 0) {
+      banner.textContent = `📵 No internet — sending location alert in ${seconds}s`;
+    } else {
+      banner.textContent = "📡 Sending your location via SMS...";
+      banner.style.background = "#C62828";
+    }
+  }
+
+  function hideOfflineBanner() {
+    const banner = document.getElementById("offline-banner");
+    if (banner) banner.style.display = "none";
   }
 
   function storeLastKnownZone(zonePayload) {
@@ -606,6 +660,65 @@ export default function GeofenceMap({
     } catch {
       window.location.href = `sms:8432419551?body=${encodeURIComponent(alertMessage)}`;
       showActionBanner("Opening SMS app — please press Send", "info");
+    }
+  }
+
+  async function sendOfflineSMSAlert() {
+    const lastZone = JSON.parse(localStorage.getItem("lastKnownZone") || "{}");
+    const user = JSON.parse(localStorage.getItem("userProfile") || "{}");
+
+    if (!user.phone) {
+      console.log("No phone number saved — cannot send SMS");
+      hideOfflineBanner();
+      return;
+    }
+
+    const zoneDesc =
+      lastZone.riskLevel === "danger"
+        ? "DANGER ZONE - Naxal/Restricted area. Stay alert."
+        : lastZone.riskLevel === "moderate"
+          ? "MODERATE ZONE - High crime area. Be cautious."
+          : lastZone.riskLevel === "safe"
+            ? "SAFE ZONE - Area is generally safe."
+            : "OUTSIDE MAPPED ZONES - Location unclassified.";
+
+    const mapsLink =
+      lastZone.lat && lastZone.lng
+        ? `https://maps.google.com/?q=${lastZone.lat},${lastZone.lng}`
+        : "Location unavailable";
+
+    const smsMessage =
+      `Tourist Safety Alert\n` +
+      `Hi ${user.name || "Tourist"}, you are offline.\n\n` +
+      `Your current location:\n` +
+      `Zone: ${lastZone.zoneName || "Unknown"}\n` +
+      `Status: ${zoneDesc}\n\n` +
+      `GPS: ${Number(lastZone.lat || 0).toFixed(4)}, ${Number(lastZone.lng || 0).toFixed(4)}\n` +
+      `Maps: ${mapsLink}\n\n` +
+      `If in danger call 112 immediately.\n` +
+      `Tourist Safety System`;
+
+    try {
+      const response = await fetch("/api/send-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: smsMessage,
+          number: user.phone,
+        }),
+      });
+      const result = await response.json();
+      console.log("Offline SMS result:", result);
+
+      if (result.success) {
+        updateOfflineBanner(-1);
+        showActionBanner("Location alert sent to your phone", "success");
+      } else {
+        window.location.href = `sms:${user.phone}?body=${encodeURIComponent(smsMessage)}`;
+      }
+    } catch (err) {
+      console.log("Offline SMS fetch failed:", err.message);
+      window.location.href = `sms:${user.phone}?body=${encodeURIComponent(smsMessage)}`;
     }
   }
 
@@ -766,12 +879,43 @@ export default function GeofenceMap({
         state: "offline",
         message: "📵 No internet — SOS will use SMS app (works on 2G)",
       });
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+
+      let offlineSeconds = 30;
+      showOfflineBanner();
+      countdownIntervalRef.current = setInterval(() => {
+        offlineSeconds -= 1;
+        updateOfflineBanner(offlineSeconds);
+        if (offlineSeconds <= 0 && countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
+      }, 1000);
+
+      offlineTimerRef.current = setTimeout(() => {
+        updateOfflineBanner(0);
+        sendOfflineSMSAlert();
+      }, 30 * 1000);
     };
 
     const onOnline = () => {
       setIsOnlineState(true);
       setConnectivityBanner({ state: "online", message: "✅ Back online" });
       setTimeout(() => setConnectivityBanner(null), 3000);
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      hideOfflineBanner();
       if (wasOfflineRef.current) handleCameBackOnline();
       wasOfflineRef.current = false;
     };
@@ -782,6 +926,15 @@ export default function GeofenceMap({
     return () => {
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      hideOfflineBanner();
     };
   }, [selectedCity]);
 
@@ -790,53 +943,6 @@ export default function GeofenceMap({
       setSosResult(null);
     }
   }, [sosModalOpen]);
-
-  useEffect(() => {
-    let heartbeatInterval = null;
-
-    const sendHeartbeat = async () => {
-      if (!navigator.onLine) return;
-
-      const token = getAuthToken();
-      if (!token) return;
-
-      const lastZone = JSON.parse(
-        localStorage.getItem("lastKnownZone") || "{}",
-      );
-      const lastLoc = JSON.parse(
-        localStorage.getItem("lastKnownLocation") || "{}",
-      );
-
-      if (!lastLoc?.lat) return;
-
-      try {
-        await fetch(api("/api/user/heartbeat"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            lat: lastLoc.lat,
-            lng: lastLoc.lng,
-            zoneName: lastZone.zoneName || "Unknown",
-            riskLevel: lastZone.riskLevel || "unknown",
-            riskScore: lastZone.riskScore || 0,
-            timestamp: Date.now(),
-          }),
-        });
-      } catch {}
-    };
-
-    sendHeartbeat();
-    heartbeatInterval = setInterval(sendHeartbeat, 20000);
-
-    return () => {
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-      }
-    };
-  }, []);
 
   function isZoneActive(zone, hour = getCurrentHour()) {
     if (!zone || typeof zone !== "object") return false;

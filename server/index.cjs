@@ -2,7 +2,6 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const https = require("https");
 
 const express = require("express");
 
@@ -234,156 +233,6 @@ function saveData() {
     DATA_PATH,
     JSON.stringify({ users: usersObj, profiles: profilesObj }, null, 2),
   );
-}
-
-function sendSMSViaHTTPS(message, number) {
-  return new Promise((resolve) => {
-    const cleanNumber = number
-      .toString()
-      .replace(/^\+91/, "")
-      .replace(/^91/, "");
-
-    const postData = JSON.stringify({
-      route: "q",
-      message,
-      language: "english",
-      flash: 0,
-      numbers: cleanNumber,
-    });
-
-    const options = {
-      hostname: "api.fast2sms.com",
-      port: 443,
-      path: "/dev/bulkV2",
-      method: "POST",
-      headers: {
-        authorization: process.env.FAST2SMS_KEY,
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(postData),
-      },
-    };
-
-    const req = https.request(options, (res) => {
-      let data = "";
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
-      res.on("end", () => {
-        try {
-          const result = JSON.parse(data);
-          console.log("Fast2SMS direct result:", result);
-          resolve(result);
-        } catch (e) {
-          resolve({ success: false, error: "parse error", raw: data });
-        }
-      });
-    });
-
-    req.on("error", (err) => {
-      console.error("HTTPS request error:", err.message);
-      resolve({ success: false, error: err.message });
-    });
-
-    req.write(postData);
-    req.end();
-  });
-}
-
-async function checkAllUsersOfflineStatus() {
-  const now = Date.now();
-  const threshold = 30 * 1000;
-  let didChange = false;
-
-  console.log(`Offline check: scanning ${profiles.size} users...`);
-
-  for (const [blockchainId, profile] of profiles.entries()) {
-    if (!profile?.lastHeartbeat) continue;
-
-    const linkedUser =
-      Array.from(users.values()).find(
-        (entry) => entry.blockchainId === blockchainId,
-      ) || null;
-
-    if (profile.offlineAlertSent && profile.lastOfflineAlert) {
-      if (now - Number(profile.lastOfflineAlert) > 5 * 60 * 1000) {
-        profile.offlineAlertSent = false;
-        profiles.set(blockchainId, profile);
-        if (linkedUser?.username) {
-          linkedUser.offlineAlertSent = false;
-          users.set(linkedUser.username, linkedUser);
-        }
-        didChange = true;
-      }
-    }
-
-    if (profile.offlineAlertSent) continue;
-
-    const timeSince = now - Number(profile.lastHeartbeat.timestamp || 0);
-    console.log(
-      `${profile.name || linkedUser?.name || blockchainId}: ${Math.round(timeSince / 1000)}s since heartbeat, zone: ${profile.lastHeartbeat.zoneName}, risk: ${profile.lastHeartbeat.riskLevel}`,
-    );
-
-    if (timeSince < threshold) continue;
-
-    console.log(
-      `${profile.name || linkedUser?.name || blockchainId}: OFFLINE — sending SMS alert`,
-    );
-
-    const zoneDesc =
-      profile.lastHeartbeat.riskLevel === "danger"
-        ? "DANGER ZONE - Naxal affected. Stay alert."
-        : profile.lastHeartbeat.riskLevel === "moderate"
-          ? "MODERATE ZONE - High crime area. Be cautious."
-          : profile.lastHeartbeat.riskLevel === "safe"
-            ? "SAFE ZONE - Area is generally safe."
-            : "OUTSIDE MAPPED ZONES - Stay cautious.";
-
-    const smsMessage =
-      `Tourist Safety Alert\n` +
-      `Hi ${profile.name || linkedUser?.name || "Traveler"}, you appear to be offline.\n\n` +
-      `Last known location:\n` +
-      `Zone: ${profile.lastHeartbeat.zoneName || "Unknown"}\n` +
-      `Status: ${zoneDesc}\n\n` +
-      `GPS: ${Number(profile.lastHeartbeat.lat).toFixed(4)}, ${Number(profile.lastHeartbeat.lng).toFixed(4)}\n` +
-      `Maps: https://maps.google.com/?q=${profile.lastHeartbeat.lat},${profile.lastHeartbeat.lng}\n\n` +
-      `If in danger call 112 immediately.\n` +
-      `Tourist Safety System`;
-
-    const userPhone = String(
-      linkedUser?.phone ||
-        linkedUser?.emergencyContact ||
-        profile.mobile ||
-        profile.emergencyContacts ||
-        "",
-    ).trim();
-    console.log(`Sending SMS to: ${userPhone}`);
-
-    if (!userPhone) {
-      console.log(
-        `No phone number for ${profile.name || linkedUser?.name || blockchainId} — skipping`,
-      );
-      continue;
-    }
-
-    const result = await sendSMSViaHTTPS(smsMessage, userPhone);
-    console.log("SMS sent result:", JSON.stringify(result));
-
-    if (result?.success === true) {
-      profile.offlineAlertSent = true;
-      profile.lastOfflineAlert = Date.now();
-      profiles.set(blockchainId, profile);
-      if (linkedUser?.username) {
-        linkedUser.offlineAlertSent = true;
-        linkedUser.lastOfflineAlert = profile.lastOfflineAlert;
-        users.set(linkedUser.username, linkedUser);
-      }
-      didChange = true;
-    }
-  }
-
-  if (didChange) {
-    saveData();
-  }
 }
 
 // ===== Contract address loading =====
@@ -735,7 +584,6 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  checkAllUsersOfflineStatus().catch(console.error);
   res.json({ status: "ok" });
 });
 
@@ -746,58 +594,6 @@ app.get("/debug/state", (req, res) => {
     profileIds: Array.from(profiles.keys()).slice(0, 20),
     contractAddress: CONTRACT_ADDRESS,
   });
-});
-
-app.get("/api/test-sms", async (req, res) => {
-  const result = await sendSMSViaHTTPS(
-    "Test from Tourist Safety System",
-    "8432419551",
-  );
-  res.json(result);
-});
-
-app.post("/api/user/heartbeat", authMiddleware, async (req, res) => {
-  try {
-    const { username } = req.user || {};
-    const user = users.get(username);
-    if (!user) {
-      return res.json({ success: false });
-    }
-
-    const profile = profiles.get(user.blockchainId);
-    if (!profile) {
-      return res.json({ success: false });
-    }
-
-    const lat = Number(req.body?.lat);
-    const lng = Number(req.body?.lng);
-    const zoneName = String(req.body?.zoneName || "Unknown").trim();
-    const riskLevel = String(req.body?.riskLevel || "unknown")
-      .trim()
-      .toLowerCase();
-    const riskScore = Number(req.body?.riskScore || 0);
-
-    profile.lastHeartbeat = {
-      lat: Number.isFinite(lat) ? lat : null,
-      lng: Number.isFinite(lng) ? lng : null,
-      zoneName,
-      riskLevel,
-      riskScore: Number.isFinite(riskScore) ? riskScore : 0,
-      timestamp: Date.now(),
-    };
-    profile.offlineAlertSent = false;
-    profiles.set(user.blockchainId, profile);
-    user.lastHeartbeat = profile.lastHeartbeat;
-    user.offlineAlertSent = false;
-    users.set(username, user);
-    saveData();
-    res.json({ success: true });
-    await checkAllUsersOfflineStatus();
-    return;
-  } catch (err) {
-    console.log("USER HEARTBEAT ERROR:", err);
-    return res.json({ success: false });
-  }
 });
 
 app.post("/api/user/last-location", authMiddleware, (req, res) => {
@@ -880,12 +676,6 @@ app.post("/api/emergency/location-alert", async (req, res) => {
     });
   }
 });
-
-setInterval(() => {
-  checkAllUsersOfflineStatus().catch((err) => {
-    console.error("Heartbeat checker error:", err.message);
-  });
-}, 30000);
 
 app.get("/api/tourist-spots/:city", (req, res) => {
   try {
