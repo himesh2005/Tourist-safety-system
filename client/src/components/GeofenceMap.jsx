@@ -664,11 +664,16 @@ export default function GeofenceMap({
   }
 
   async function sendOfflineSMSAlert() {
+    offlineTimerRef.current = null;
     const lastZone = JSON.parse(localStorage.getItem("lastKnownZone") || "{}");
     const user = JSON.parse(localStorage.getItem("userProfile") || "{}");
 
     if (!user.phone) {
       console.log("No phone number saved — cannot send SMS");
+      showActionBanner(
+        "No registered mobile number found for offline alerts",
+        "warning",
+      );
       hideOfflineBanner();
       return;
     }
@@ -699,7 +704,7 @@ export default function GeofenceMap({
       `Tourist Safety System`;
 
     try {
-      const response = await fetch("/api/send-sms", {
+      const response = await fetch(SMS_API_PATH, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -710,7 +715,7 @@ export default function GeofenceMap({
       const result = await response.json();
       console.log("Offline SMS result:", result);
 
-      if (result.success) {
+      if (response.ok && result.success) {
         updateOfflineBanner(-1);
         showActionBanner("Location alert sent to your phone", "success");
       } else {
