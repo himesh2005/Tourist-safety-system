@@ -446,6 +446,7 @@ export default function GeofenceMap({
   const [actionBanner, setActionBanner] = useState(null);
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [sosSubmitting, setSosSubmitting] = useState(false);
+  const [sosResult, setSosResult] = useState(null);
   const [cachedZone, setCachedZone] = useState(null);
 
   const mapContainerRef = useRef(null);
@@ -508,6 +509,10 @@ export default function GeofenceMap({
     bannerTimeoutRef.current = setTimeout(() => {
       setActionBanner(null);
     }, duration);
+  }
+
+  function showSOSResult(type, message) {
+    setSosResult({ type, message });
   }
 
   function storeLastKnownZone(zonePayload) {
@@ -670,6 +675,49 @@ export default function GeofenceMap({
     });
   }
 
+  async function sendSOSAlert(lat, lng, sosMessage) {
+    if (!navigator.onLine) {
+      window.location.href = `sms:8432419551?body=${encodeURIComponent(sosMessage)}`;
+      showSOSResult(
+        "sms",
+        "Opening SMS app — press Send to alert emergency contact",
+      );
+      showActionBanner("Opening SMS app — please press Send", "info");
+      return;
+    }
+
+    try {
+      showSOSResult("loading", "Sending alert...");
+
+      const response = await fetch(api("/api/emergency/sos"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: JSON.stringify({ lat, lng, message: sosMessage }),
+        signal: AbortSignal.timeout(8000),
+      });
+
+      if (response.ok) {
+        showSOSResult(
+          "success",
+          "✅ Emergency alert sent successfully via SMS",
+        );
+        showActionBanner(
+          "Emergency alert sent to nearest police station",
+          "success",
+        );
+      } else {
+        throw new Error("Backend failed");
+      }
+    } catch {
+      window.location.href = `sms:8432419551?body=${encodeURIComponent(sosMessage)}`;
+      showSOSResult("sms", "📱 Opening SMS app — press Send to complete alert");
+      showActionBanner("Opening SMS app — please press Send", "info");
+    }
+  }
+
   async function sendSosAlert() {
     if (!Array.isArray(userPosition) || userPosition.length !== 2) return;
     const [lat, lng] = userPosition;
@@ -688,30 +736,9 @@ export default function GeofenceMap({
 
     setSosSubmitting(true);
     try {
-      if (!navigator.onLine) throw new Error("offline");
-      const response = await fetch(api("/api/emergency/sos"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lat,
-          lng,
-          userId: effectiveUserProfile.id,
-          zoneName,
-          riskLevel,
-          message: sosMessage,
-        }),
-      });
-      if (!response.ok) throw new Error("sos failed");
-      showActionBanner(
-        "Emergency alert sent to nearest police station",
-        "success",
-      );
-    } catch {
-      window.location.href = `sms:8432419551?body=${encodeURIComponent(sosMessage)}`;
-      showActionBanner("Opening SMS app — please press Send", "info");
+      await sendSOSAlert(lat, lng, sosMessage);
     } finally {
       setSosSubmitting(false);
-      setSosModalOpen(false);
     }
   }
 
@@ -744,6 +771,12 @@ export default function GeofenceMap({
       window.removeEventListener("online", onOnline);
     };
   }, [selectedCity]);
+
+  useEffect(() => {
+    if (!sosModalOpen) {
+      setSosResult(null);
+    }
+  }, [sosModalOpen]);
 
   function isZoneActive(zone, hour = getCurrentHour()) {
     if (!zone || typeof zone !== "object") return false;
@@ -1452,7 +1485,7 @@ export default function GeofenceMap({
             onClick={() => (sosSubmitting ? null : setSosModalOpen(false))}
           >
             <motion.div
-              className="gm-sos-modal"
+              className="gm-sos-modal sos-modal"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -1489,6 +1522,14 @@ export default function GeofenceMap({
               >
                 Cancel
               </button>
+              {sosResult ? (
+                <div
+                  id="sos-result"
+                  className={`gm-sos-result gm-sos-result--${sosResult.type}`}
+                >
+                  {sosResult.message}
+                </div>
+              ) : null}
             </motion.div>
           </motion.div>
         ) : null}
