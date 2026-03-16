@@ -15,6 +15,99 @@ const GADCHIROLI_CENTER = [20.1849, 80.003];
 const NAGPUR_CENTER = [21.1458, 79.0882];
 const DEMO_LOCATION = [21.1445, 79.091];
 const ALERT_INTERVAL_MS = 5 * 60 * 1000;
+const EMERGENCY_FALLBACK = {
+  gadchiroli: {
+    policeStations: [
+      {
+        id: "gadchiroli-town-ps-fallback",
+        name: "Gadchiroli Town Police Station",
+        lat: 20.183,
+        lng: 80.005,
+        address: "Main Road, Gadchiroli",
+        phone: "07132-222218",
+      },
+      {
+        id: "chamorshi-ps-fallback",
+        name: "Chamorshi Police Station",
+        lat: 19.9445772,
+        lng: 79.8913349,
+        address: "Chamorshi, Gadchiroli",
+        phone: "07132-285218",
+      },
+      {
+        id: "etapalli-ps-fallback",
+        name: "Etapalli Police Station",
+        lat: 19.52,
+        lng: 80.08,
+        address: "Etapalli, Gadchiroli",
+        phone: "07133-275218",
+      },
+      {
+        id: "aheri-ps-fallback",
+        name: "Aheri Police Station",
+        lat: 19.41481,
+        lng: 80.0037854,
+        address: "Aheri, Gadchiroli",
+        phone: "07133-242218",
+      },
+      {
+        id: "sironcha-ps-fallback",
+        name: "Sironcha Police Station",
+        lat: 18.85,
+        lng: 79.98,
+        address: "Sironcha, Gadchiroli",
+        phone: "07133-265218",
+      },
+    ],
+    hospitals: [
+      {
+        id: "district-hospital-fallback",
+        name: "District General Hospital, Gadchiroli",
+        lat: 20.18,
+        lng: 80.0,
+        address: "Civil Lines, Gadchiroli",
+        phone: "07132-222501",
+        emergency: true,
+      },
+      {
+        id: "sdh-aheri-fallback",
+        name: "Sub District Hospital Aheri",
+        lat: 19.41481,
+        lng: 80.0037854,
+        address: "Aheri, Gadchiroli",
+        phone: "07133-242501",
+        emergency: true,
+      },
+      {
+        id: "rural-etapalli-fallback",
+        name: "Rural Hospital Etapalli",
+        lat: 19.602676,
+        lng: 80.229383,
+        address: "Etapalli, Gadchiroli",
+        phone: "07133-275501",
+        emergency: true,
+      },
+      {
+        id: "rural-sironcha-fallback",
+        name: "Rural Hospital, Sironcha",
+        lat: 18.8488143,
+        lng: 79.964452,
+        address: "Sironcha, Gadchiroli",
+        phone: "07133-265501",
+        emergency: true,
+      },
+      {
+        id: "lokbiradari-fallback",
+        name: "Lokbiradari Multispeciality Hospital, Hemalkasa",
+        lat: 19.4242869,
+        lng: 80.5653456,
+        address: "Hemalkasa, Bhamragad Taluka",
+        phone: "07133-270066",
+        emergency: true,
+      },
+    ],
+  },
+};
 
 function escapeHtml(value) {
   return String(value || "")
@@ -213,6 +306,13 @@ function normalizeEmergencyServices(data) {
     hospitals: normalizeEntries(hospitals),
     police_stations: normalizeEntries(policeStations),
   };
+}
+
+function getEmergencyFallback(cityKey) {
+  const key = String(cityKey || "")
+    .trim()
+    .toLowerCase();
+  return EMERGENCY_FALLBACK[key] || null;
 }
 
 function getZoneVisual(riskLevel) {
@@ -1275,19 +1375,51 @@ export default function GeofenceMap({
           }
 
           if (emergencyResponse.ok) {
-            setEmergencyInfo(
-              normalizeEmergencyServices(await emergencyResponse.json()),
+            const normalizedEmergency = normalizeEmergencyServices(
+              await emergencyResponse.json(),
             );
+            if (
+              normalizedEmergency.hospitals.length === 0 &&
+              normalizedEmergency.police_stations.length === 0
+            ) {
+              const fallback = getEmergencyFallback(selectedCity);
+              if (fallback) {
+                setEmergencyInfo(normalizeEmergencyServices(fallback));
+                setEmergencyError(
+                  "Live emergency data unavailable. Showing cached district services.",
+                );
+              } else {
+                setEmergencyInfo(normalizedEmergency);
+              }
+            } else {
+              setEmergencyInfo(normalizedEmergency);
+            }
           } else {
-            setEmergencyInfo({ hospitals: [], police_stations: [] });
-            setEmergencyError("No emergency service dataset available.");
+            const fallback = getEmergencyFallback(selectedCity);
+            if (fallback) {
+              setEmergencyInfo(normalizeEmergencyServices(fallback));
+              setEmergencyError(
+                "Live emergency data unavailable. Showing cached district services.",
+              );
+            } else {
+              setEmergencyInfo({ hospitals: [], police_stations: [] });
+              setEmergencyError("No emergency service dataset available.");
+            }
           }
         }
       } catch {
         if (!cancelled) {
           setTouristSpots([]);
-          setEmergencyInfo({ hospitals: [], police_stations: [] });
-          setEmergencyError("Unable to load emergency services.");
+          const fallback = getEmergencyFallback(selectedCity);
+          if (fallback) {
+            setEmergencyInfo(normalizeEmergencyServices(fallback));
+            setEmergencyError(
+              "Network issue. Showing cached district emergency services.",
+            );
+          } else {
+            setEmergencyInfo({ hospitals: [], police_stations: [] });
+            setEmergencyError("Unable to load emergency services.");
+          }
         }
       } finally {
         if (!cancelled) setEmergencyLoading(false);
