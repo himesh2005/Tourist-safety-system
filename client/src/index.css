@@ -1689,7 +1689,15 @@ a:hover {
 }
 
 .zone-polygon-danger {
-    animation: zoneDangerPulse 2s ease-in-out infinite;
+    fill-opacity: 0.35;
+}
+
+.zone-polygon-moderate {
+    fill-opacity: 0.30;
+}
+
+.zone-danger-pulse-line {
+    animation: zoneDangerDashPulse 1.4s linear infinite;
 }
 
 .leaflet-tooltip {
@@ -1837,15 +1845,17 @@ a:hover {
     }
 }
 
-@keyframes zoneDangerPulse {
-    0%,
-    100% {
-        filter: drop-shadow(0 0 0 rgba(234, 67, 53, 0));
-        stroke-width: 2;
+@keyframes zoneDangerDashPulse {
+    0% {
+        stroke-dashoffset: 0;
+        opacity: 0.6;
     }
     50% {
-        filter: drop-shadow(0 0 8px rgba(234, 67, 53, 0.45));
-        stroke-width: 3;
+        opacity: 1;
+    }
+    100% {
+        stroke-dashoffset: -24;
+        opacity: 0.6;
     }
 }
 
@@ -2330,7 +2340,15 @@ a:hover {
 }
 
 .zone-polygon-danger {
-    animation: zoneDangerPulse 2s ease-in-out infinite;
+    fill-opacity: 0.35;
+}
+
+.zone-polygon-moderate {
+    fill-opacity: 0.30;
+}
+
+.zone-danger-pulse-line {
+    animation: zoneDangerDashPulse 1.4s linear infinite;
 }
 
 @media (max-width: 767px) {

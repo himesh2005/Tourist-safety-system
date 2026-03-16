@@ -272,6 +272,72 @@ function buildTouristPopup(spot, warningInDanger) {
 </div>`;
 }
 
+function buildZonePopup(zone) {
+  const dangerColor = zone.riskLevel === "danger" ? "#C62828" : "#E65100";
+  const dangerIcon = zone.riskLevel === "danger" ? "🔴" : "🟠";
+  const zoneName = escapeHtml(zone.name || "Restricted Zone");
+  const restrictionType = escapeHtml(
+    zone.restrictionType ||
+      (zone.riskLevel === "danger" ? "Danger Zone" : "Moderate Zone"),
+  );
+  const whyDanger = escapeHtml(
+    zone.whyDanger || zone.reason || "Area has reported safety restrictions.",
+  );
+  const whatToDo = escapeHtml(
+    zone.whatToDo ||
+      "Follow local authority instructions and avoid risky travel.",
+  );
+  const policePhone = escapeHtml(zone.policePhone || "112");
+  const officialSource = escapeHtml(zone.officialSource || "Official advisory");
+
+  return `<div style="padding:16px;max-width:260px;font-family:'DM Sans',sans-serif">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span style="font-size:18px">${dangerIcon}</span>
+    <div>
+      <div style="font-size:14px;font-weight:600;color:#1a1a1a">
+        ${zoneName}
+      </div>
+      <div style="display:inline-block;background:${dangerColor};
+        color:white;font-size:10px;font-weight:600;padding:2px 8px;
+        border-radius:99px;margin-top:2px;text-transform:uppercase">
+        ${restrictionType}
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#FFF3E0;border-left:3px solid #E65100;
+    padding:8px 10px;border-radius:0 6px 6px 0;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:600;color:#E65100;
+      margin-bottom:3px">WHY TO BE CAREFUL</div>
+    <div style="font-size:12px;color:#4a3000;line-height:1.5">
+      ${whyDanger}
+    </div>
+  </div>
+
+  <div style="background:#E8F5E9;border-left:3px solid #2E7D32;
+    padding:8px 10px;border-radius:0 6px 6px 0;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:600;color:#2E7D32;
+      margin-bottom:3px">WHAT TO DO</div>
+    <div style="font-size:12px;color:#1a3a1a;line-height:1.5">
+      ${whatToDo}
+    </div>
+  </div>
+
+  <a href="tel:${policePhone}"
+    style="display:flex;align-items:center;justify-content:center;
+    gap:6px;background:#1565C0;color:white;padding:8px 12px;
+    border-radius:8px;font-size:12px;font-weight:600;
+    text-decoration:none;margin-bottom:8px">
+    📞 Call Local Police: ${policePhone}
+  </a>
+
+  <div style="font-size:10px;color:#888;text-align:center">
+    Source: ${officialSource}
+  </div>
+
+</div>`;
+}
+
 function createMarkerIcon(type) {
   if (type === "police") {
     return L.divIcon({
@@ -1251,21 +1317,44 @@ export default function GeofenceMap({
     zones.forEach((zone) => {
       if (zone.type === "time_based" && !isZoneActive(zone)) return;
 
-      const visual = getZoneVisual(zone.riskLevel);
+      const isDangerZone = zone.riskLevel === "danger";
+      const isModerateZone = zone.riskLevel === "moderate";
+      const visual = isDangerZone
+        ? { fill: "#ef5350", stroke: "#C62828", opacity: 0.35 }
+        : isModerateZone
+          ? { fill: "#FFA726", stroke: "#E65100", opacity: 0.3 }
+          : { fill: "#66BB6A", stroke: "#2E7D32", opacity: 0.25 };
       const polygon = L.polygon(zone.coordinates, {
         color: visual.stroke,
         weight: 2,
         fillColor: visual.fill,
-        fillOpacity: 0.25,
+        fillOpacity: visual.opacity,
         className: `zone-polygon zone-polygon-${zone.riskLevel}`,
       });
 
-      polygon.on("click", () => {
+      polygon.bindPopup(buildZonePopup(zone), {
+        maxWidth: 280,
+        closeButton: true,
+        className: "gm-zone-popup",
+      });
+
+      polygon.on("click", (event) => {
         setSelectedZone(zone);
-        setShowIntelPanel(true);
+        polygon.openPopup(event.latlng);
       });
 
       polygon.addTo(zoneLayerGroupRef.current);
+
+      if (isDangerZone) {
+        L.polyline(zone.coordinates, {
+          color: "#C62828",
+          weight: 2,
+          opacity: 0.95,
+          dashArray: "8, 4",
+          interactive: false,
+          className: "zone-danger-pulse-line",
+        }).addTo(zoneLayerGroupRef.current);
+      }
     });
   }, [currentHour, isDemoMode, zones]);
 
@@ -1734,7 +1823,7 @@ export default function GeofenceMap({
                 <strong>{selectedZone?.name || "Tap any zone"}</strong>
                 <span>
                   {selectedZone
-                    ? `${toTitle(selectedZone.riskLevel)} • Score ${selectedZone.riskScore ?? selectedZone.crimeIndex ?? "N/A"}`
+                    ? `${toTitle(selectedZone.riskLevel)} • ${selectedZone.restrictionType || "Zone advisory"}`
                     : "Zone details open here"}
                 </span>
               </div>
@@ -1753,10 +1842,10 @@ export default function GeofenceMap({
                 </span>
               </div>
 
-              {selectedZone?.reason ? (
+              {selectedZone?.whyDanger || selectedZone?.reason ? (
                 <div className="gm-intel-detail">
                   <strong>Why this zone matters</strong>
-                  <p>{selectedZone.reason}</p>
+                  <p>{selectedZone.whyDanger || selectedZone.reason}</p>
                 </div>
               ) : null}
             </motion.aside>
