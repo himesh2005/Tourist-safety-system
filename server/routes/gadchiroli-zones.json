@@ -17,10 +17,10 @@
         [19.52, 80.28],
         [19.52, 80.42],
         [19.44, 80.45],
-        [19.38, 80.40],
+        [19.38, 80.4],
         [19.36, 80.28],
         [19.42, 80.22],
-        [19.50, 80.23],
+        [19.5, 80.23],
         [19.52, 80.28]
       ]
     },
@@ -35,10 +35,10 @@
       "officialSource": "Maharashtra Home Dept Notification 2025",
       "coordinates": [
         [19.58, 80.08],
-        [19.58, 80.20],
-        [19.50, 80.22],
+        [19.58, 80.2],
+        [19.5, 80.22],
         [19.42, 80.22],
-        [19.40, 80.10],
+        [19.4, 80.1],
         [19.46, 80.03],
         [19.54, 80.04],
         [19.58, 80.08]
@@ -54,14 +54,14 @@
       "policePhone": "07133-265218",
       "officialSource": "gadchiroli.gov.in/police + SATP 2024",
       "coordinates": [
-        [19.10, 80.02],
-        [19.10, 80.18],
+        [19.1, 80.02],
+        [19.1, 80.18],
         [18.95, 80.22],
         [18.82, 80.15],
-        [18.78, 80.00],
+        [18.78, 80.0],
         [18.85, 79.88],
-        [19.00, 79.90],
-        [19.10, 80.02]
+        [19.0, 79.9],
+        [19.1, 80.02]
       ]
     },
     {
@@ -74,13 +74,13 @@
       "policePhone": "07133-275218",
       "officialSource": "Maharashtra Government Mining Lease 2021",
       "coordinates": [
-        [19.68, 80.30],
-        [19.68, 80.40],
-        [19.60, 80.42],
+        [19.68, 80.3],
+        [19.68, 80.4],
+        [19.6, 80.42],
         [19.55, 80.36],
         [19.58, 80.28],
         [19.64, 80.27],
-        [19.68, 80.30]
+        [19.68, 80.3]
       ]
     },
     {
@@ -95,7 +95,7 @@
       "coordinates": [
         [19.96, 79.68],
         [19.96, 79.88],
-        [19.84, 79.90],
+        [19.84, 79.9],
         [19.76, 79.82],
         [19.78, 79.66],
         [19.88, 79.62],
@@ -112,13 +112,13 @@
       "policePhone": "07132-263400",
       "officialSource": "Indian Forest Act 1927 + Maharashtra Forest Dept 1992",
       "coordinates": [
-        [19.55, 79.90],
+        [19.55, 79.9],
         [19.55, 80.05],
         [19.44, 80.06],
         [19.38, 79.98],
-        [19.40, 79.85],
+        [19.4, 79.85],
         [19.48, 79.82],
-        [19.55, 79.90]
+        [19.55, 79.9]
       ]
     },
     {
@@ -131,13 +131,32 @@
       "policePhone": "07133-265218",
       "officialSource": "Wildlife Protection Act 1972 + Maharashtra Forest Dept",
       "coordinates": [
-        [19.22, 79.80],
+        [19.22, 79.8],
         [19.22, 79.95],
-        [19.10, 79.96],
+        [19.1, 79.96],
         [19.02, 79.88],
         [19.05, 79.76],
         [19.15, 79.74],
-        [19.22, 79.80]
+        [19.22, 79.8]
+      ]
+    },
+    {
+      "id": "aheri-sensitive-corridor",
+      "name": "Aheri Sensitive Transit Corridor",
+      "riskLevel": "moderate",
+      "restrictionType": "Sensitive Transit Zone",
+      "whyDanger": "Aheri belt has periodic security advisories due to movement in interior forest stretches and isolated roads after dark.",
+      "whatToDo": "Prefer daytime travel only, stay on major roads, and inform local police before interior travel.",
+      "policePhone": "07133-266218",
+      "officialSource": "District Police Advisory",
+      "coordinates": [
+        [19.68, 79.86],
+        [19.68, 80.0],
+        [19.56, 80.02],
+        [19.5, 79.94],
+        [19.54, 79.82],
+        [19.63, 79.8],
+        [19.68, 79.86]
       ]
     }
   ]

@@ -1693,7 +1693,7 @@ a:hover {
 }
 
 .zone-polygon-moderate {
-    fill-opacity: 0.30;
+    fill-opacity: 0.3;
 }
 
 .zone-danger-pulse-line {
@@ -2344,7 +2344,7 @@ a:hover {
 }
 
 .zone-polygon-moderate {
-    fill-opacity: 0.30;
+    fill-opacity: 0.3;
 }
 
 .zone-danger-pulse-line {
@@ -2476,5 +2476,24 @@ a:hover {
     to {
         transform: translateX(-50%) translateY(-20px);
         opacity: 0;
+    }
+}
+
+/* Keep map action FABs above the bottom sheet at all times. */
+.gm-fab-stack {
+    position: fixed;
+    right: 16px;
+    bottom: 248px;
+    z-index: 1400;
+}
+
+.gm-bottom-sheet {
+    z-index: 1200;
+}
+
+@media (max-width: 767px) {
+    .gm-fab-stack {
+        right: 12px;
+        bottom: 232px;
     }
 }
