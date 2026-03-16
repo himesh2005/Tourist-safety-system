@@ -1,163 +1,383 @@
 {
-  "city": "gadchiroli",
-  "state": "Maharashtra",
-  "country": "India",
-  "center": [20.1849, 80.003],
-  "zones": [
-    {
-      "id": "bhamragad-forest-core",
-      "name": "Bhamragad Forest Core Zone",
-      "riskLevel": "danger",
-      "restrictionType": "LWE Active Zone",
-      "whyDanger": "Active Naxal presence. Maharashtra Government officially restricted civilian entry. Police permission mandatory before entering.",
-      "whatToDo": "Contact Bhamragad Police Station before entering. Call 112 if in danger.",
-      "policePhone": "07133-288218",
-      "officialSource": "gadchiroli.gov.in/police",
-      "coordinates": [
-        [19.52, 80.28],
-        [19.52, 80.42],
-        [19.44, 80.45],
-        [19.38, 80.4],
-        [19.36, 80.28],
-        [19.42, 80.22],
-        [19.5, 80.23],
-        [19.52, 80.28]
-      ]
-    },
-    {
-      "id": "etapalli-border-zone",
-      "name": "Etapalli Border Forest Zone",
-      "riskLevel": "danger",
-      "restrictionType": "LWE Active Zone",
-      "whyDanger": "Dense forest border with Chhattisgarh. Active Maoist movement corridor. Maharashtra Home Department designated sensitive zone 2025.",
-      "whatToDo": "Do not enter without police escort. Contact Etapalli Police Station.",
-      "policePhone": "07133-275218",
-      "officialSource": "Maharashtra Home Dept Notification 2025",
-      "coordinates": [
-        [19.58, 80.08],
-        [19.58, 80.2],
-        [19.5, 80.22],
-        [19.42, 80.22],
-        [19.4, 80.1],
-        [19.46, 80.03],
-        [19.54, 80.04],
-        [19.58, 80.08]
-      ]
-    },
-    {
-      "id": "sironcha-border-corridor",
-      "name": "Sironcha Border Corridor",
-      "riskLevel": "danger",
-      "restrictionType": "LWE Active Zone",
-      "whyDanger": "Maharashtra-Telangana border. Historically most active Naxal corridor in Gadchiroli. Night movement strictly prohibited.",
-      "whatToDo": "Avoid after sunset. Inform Sironcha Police before any visit.",
-      "policePhone": "07133-265218",
-      "officialSource": "gadchiroli.gov.in/police + SATP 2024",
-      "coordinates": [
-        [19.1, 80.02],
-        [19.1, 80.18],
-        [18.95, 80.22],
-        [18.82, 80.15],
-        [18.78, 80.0],
-        [18.85, 79.88],
-        [19.0, 79.9],
-        [19.1, 80.02]
-      ]
-    },
-    {
-      "id": "surjagad-mining-zone",
-      "name": "Surjagad Mining Restricted Area",
-      "riskLevel": "danger",
-      "restrictionType": "Active Mining Zone + LWE Sensitive",
-      "whyDanger": "Active iron ore mining operations under Mines Act 1952. Civilian entry prohibited in mining area. Also listed as LWE sensitive by Home Dept 2025.",
-      "whatToDo": "Do not enter mining perimeter. Stay on NH-136 only.",
-      "policePhone": "07133-275218",
-      "officialSource": "Maharashtra Government Mining Lease 2021",
-      "coordinates": [
-        [19.68, 80.3],
-        [19.68, 80.4],
-        [19.6, 80.42],
-        [19.55, 80.36],
-        [19.58, 80.28],
-        [19.64, 80.27],
-        [19.68, 80.3]
-      ]
-    },
-    {
-      "id": "chaprala-sanctuary",
-      "name": "Chaprala Wildlife Sanctuary",
-      "riskLevel": "moderate",
-      "restrictionType": "Protected Wildlife Sanctuary",
-      "whyDanger": "Wildlife Protection Act 1972 Section 27. Home to tigers, leopards and sloth bears. Entry without Forest Department permit is a criminal offence.",
-      "whatToDo": "Get entry permit from Forest Range Officer, Korchi. Entry fee Rs.50. Do not enter after 6 PM.",
-      "policePhone": "07132-278218",
-      "officialSource": "Wildlife Protection Act 1972 + Maharashtra Tourism",
-      "coordinates": [
-        [19.96, 79.68],
-        [19.96, 79.88],
-        [19.84, 79.9],
-        [19.76, 79.82],
-        [19.78, 79.66],
-        [19.88, 79.62],
-        [19.96, 79.68]
-      ]
-    },
-    {
-      "id": "allapalli-reserved-forest",
-      "name": "Allapalli Reserved Forest",
-      "riskLevel": "moderate",
-      "restrictionType": "Reserved Forest",
-      "whyDanger": "Indian Forest Act 1927 Section 26. 1,697 sq km declared Reserved Forest in 1992. Unauthorised entry is a criminal offence punishable with imprisonment.",
-      "whatToDo": "Forest Department permit required from DY Conservator of Forests, Gadchiroli. Contact forest office before entering.",
-      "policePhone": "07132-263400",
-      "officialSource": "Indian Forest Act 1927 + Maharashtra Forest Dept 1992",
-      "coordinates": [
-        [19.55, 79.9],
-        [19.55, 80.05],
-        [19.44, 80.06],
-        [19.38, 79.98],
-        [19.4, 79.85],
-        [19.48, 79.82],
-        [19.55, 79.9]
-      ]
-    },
-    {
-      "id": "pranhita-wildlife",
-      "name": "Pranhita Wildlife Sanctuary",
-      "riskLevel": "moderate",
-      "restrictionType": "Wildlife Sanctuary + Crocodile Habitat",
-      "whyDanger": "Officially notified wildlife sanctuary. Mugger crocodiles in Pranhita river. No swimming or wading. Forest permit required for riverside access.",
-      "whatToDo": "Stay on designated viewpoints only. Do not approach river edge. Forest permit from Sironcha Range Office.",
-      "policePhone": "07133-265218",
-      "officialSource": "Wildlife Protection Act 1972 + Maharashtra Forest Dept",
-      "coordinates": [
-        [19.22, 79.8],
-        [19.22, 79.95],
-        [19.1, 79.96],
-        [19.02, 79.88],
-        [19.05, 79.76],
-        [19.15, 79.74],
-        [19.22, 79.8]
-      ]
-    },
-    {
-      "id": "aheri-sensitive-corridor",
-      "name": "Aheri Sensitive Transit Corridor",
-      "riskLevel": "moderate",
-      "restrictionType": "Sensitive Transit Zone",
-      "whyDanger": "Aheri belt has periodic security advisories due to movement in interior forest stretches and isolated roads after dark.",
-      "whatToDo": "Prefer daytime travel only, stay on major roads, and inform local police before interior travel.",
-      "policePhone": "07133-266218",
-      "officialSource": "District Police Advisory",
-      "coordinates": [
-        [19.68, 79.86],
-        [19.68, 80.0],
-        [19.56, 80.02],
-        [19.5, 79.94],
-        [19.54, 79.82],
-        [19.63, 79.8],
-        [19.68, 79.86]
-      ]
-    }
-  ]
+    "city":  "gadchiroli",
+    "state":  "Maharashtra",
+    "country":  "India",
+    "center":  [
+                   20.1849,
+                   80.003
+               ],
+    "zones":  [
+                  {
+                      "id":  "bhamragad-forest-core",
+                      "name":  "Bhamragad Forest Core Zone",
+                      "riskLevel":  "danger",
+                      "restrictionType":  "LWE Active Zone",
+                      "whyDanger":  "Active Naxal presence. Maharashtra Government officially restricted civilian entry. Police permission mandatory before entering.",
+                      "whatToDo":  "Contact Bhamragad Police Station before entering. Call 112 if in danger.",
+                      "policePhone":  "07133-288218",
+                      "officialSource":  "gadchiroli.gov.in/police",
+                      "coordinates":  [
+                                          [
+                                              19.52,
+                                              80.28
+                                          ],
+                                          [
+                                              19.52,
+                                              80.42
+                                          ],
+                                          [
+                                              19.44,
+                                              80.45
+                                          ],
+                                          [
+                                              19.38,
+                                              80.4
+                                          ],
+                                          [
+                                              19.36,
+                                              80.28
+                                          ],
+                                          [
+                                              19.42,
+                                              80.22
+                                          ],
+                                          [
+                                              19.5,
+                                              80.23
+                                          ],
+                                          [
+                                              19.52,
+                                              80.28
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "etapalli-border-zone",
+                      "name":  "Etapalli Border Forest Zone",
+                      "riskLevel":  "danger",
+                      "restrictionType":  "LWE Active Zone",
+                      "whyDanger":  "Dense forest border with Chhattisgarh. Active Maoist movement corridor. Maharashtra Home Department designated sensitive zone 2025.",
+                      "whatToDo":  "Do not enter without police escort. Contact Etapalli Police Station.",
+                      "policePhone":  "07133-275218",
+                      "officialSource":  "Maharashtra Home Dept Notification 2025",
+                      "coordinates":  [
+                                          [
+                                              19.58,
+                                              80.08
+                                          ],
+                                          [
+                                              19.58,
+                                              80.2
+                                          ],
+                                          [
+                                              19.5,
+                                              80.22
+                                          ],
+                                          [
+                                              19.42,
+                                              80.22
+                                          ],
+                                          [
+                                              19.4,
+                                              80.1
+                                          ],
+                                          [
+                                              19.46,
+                                              80.03
+                                          ],
+                                          [
+                                              19.54,
+                                              80.04
+                                          ],
+                                          [
+                                              19.58,
+                                              80.08
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "sironcha-border-corridor",
+                      "name":  "Sironcha Border Corridor",
+                      "riskLevel":  "danger",
+                      "restrictionType":  "LWE Active Zone",
+                      "whyDanger":  "Maharashtra-Telangana border. Historically most active Naxal corridor in Gadchiroli. Night movement strictly prohibited.",
+                      "whatToDo":  "Avoid after sunset. Inform Sironcha Police before any visit.",
+                      "policePhone":  "07133-265218",
+                      "officialSource":  "gadchiroli.gov.in/police + SATP 2024",
+                      "coordinates":  [
+                                          [
+                                              19.1,
+                                              80.02
+                                          ],
+                                          [
+                                              19.1,
+                                              80.18
+                                          ],
+                                          [
+                                              18.95,
+                                              80.22
+                                          ],
+                                          [
+                                              18.82,
+                                              80.15
+                                          ],
+                                          [
+                                              18.78,
+                                              80.0
+                                          ],
+                                          [
+                                              18.85,
+                                              79.88
+                                          ],
+                                          [
+                                              19.0,
+                                              79.9
+                                          ],
+                                          [
+                                              19.1,
+                                              80.02
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "surjagad-mining-zone",
+                      "name":  "Surjagad Mining Restricted Area",
+                      "riskLevel":  "danger",
+                      "restrictionType":  "Active Mining Zone + LWE Sensitive",
+                      "whyDanger":  "Active iron ore mining operations under Mines Act 1952. Civilian entry prohibited in mining area. Also listed as LWE sensitive by Home Dept 2025.",
+                      "whatToDo":  "Do not enter mining perimeter. Stay on NH-136 only.",
+                      "policePhone":  "07133-275218",
+                      "officialSource":  "Maharashtra Government Mining Lease 2021",
+                      "coordinates":  [
+                                          [
+                                              19.68,
+                                              80.3
+                                          ],
+                                          [
+                                              19.68,
+                                              80.4
+                                          ],
+                                          [
+                                              19.6,
+                                              80.42
+                                          ],
+                                          [
+                                              19.55,
+                                              80.36
+                                          ],
+                                          [
+                                              19.58,
+                                              80.28
+                                          ],
+                                          [
+                                              19.64,
+                                              80.27
+                                          ],
+                                          [
+                                              19.68,
+                                              80.3
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "chaprala-sanctuary",
+                      "name":  "Chaprala Wildlife Sanctuary",
+                      "riskLevel":  "moderate",
+                      "restrictionType":  "Protected Wildlife Sanctuary",
+                      "whyDanger":  "Wildlife Protection Act 1972 Section 27. Home to tigers, leopards and sloth bears. Entry without Forest Department permit is a criminal offence.",
+                      "whatToDo":  "Get entry permit from Forest Range Officer, Korchi. Entry fee Rs.50. Do not enter after 6 PM.",
+                      "policePhone":  "07132-278218",
+                      "officialSource":  "Wildlife Protection Act 1972 + Maharashtra Tourism",
+                      "coordinates":  [
+                                          [
+                                              19.96,
+                                              79.68
+                                          ],
+                                          [
+                                              19.96,
+                                              79.88
+                                          ],
+                                          [
+                                              19.84,
+                                              79.9
+                                          ],
+                                          [
+                                              19.76,
+                                              79.82
+                                          ],
+                                          [
+                                              19.78,
+                                              79.66
+                                          ],
+                                          [
+                                              19.88,
+                                              79.62
+                                          ],
+                                          [
+                                              19.96,
+                                              79.68
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "allapalli-reserved-forest",
+                      "name":  "Allapalli Reserved Forest",
+                      "riskLevel":  "moderate",
+                      "restrictionType":  "Reserved Forest",
+                      "whyDanger":  "Indian Forest Act 1927 Section 26. 1,697 sq km declared Reserved Forest in 1992. Unauthorised entry is a criminal offence punishable with imprisonment.",
+                      "whatToDo":  "Forest Department permit required from DY Conservator of Forests, Gadchiroli. Contact forest office before entering.",
+                      "policePhone":  "07132-263400",
+                      "officialSource":  "Indian Forest Act 1927 + Maharashtra Forest Dept 1992",
+                      "coordinates":  [
+                                          [
+                                              19.55,
+                                              79.9
+                                          ],
+                                          [
+                                              19.55,
+                                              80.05
+                                          ],
+                                          [
+                                              19.44,
+                                              80.06
+                                          ],
+                                          [
+                                              19.38,
+                                              79.98
+                                          ],
+                                          [
+                                              19.4,
+                                              79.85
+                                          ],
+                                          [
+                                              19.48,
+                                              79.82
+                                          ],
+                                          [
+                                              19.55,
+                                              79.9
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "pranhita-wildlife",
+                      "name":  "Pranhita Wildlife Sanctuary",
+                      "riskLevel":  "moderate",
+                      "restrictionType":  "Wildlife Sanctuary + Crocodile Habitat",
+                      "whyDanger":  "Officially notified wildlife sanctuary. Mugger crocodiles in Pranhita river. No swimming or wading. Forest permit required for riverside access.",
+                      "whatToDo":  "Stay on designated viewpoints only. Do not approach river edge. Forest permit from Sironcha Range Office.",
+                      "policePhone":  "07133-265218",
+                      "officialSource":  "Wildlife Protection Act 1972 + Maharashtra Forest Dept",
+                      "coordinates":  [
+                                          [
+                                              19.22,
+                                              79.8
+                                          ],
+                                          [
+                                              19.22,
+                                              79.95
+                                          ],
+                                          [
+                                              19.1,
+                                              79.96
+                                          ],
+                                          [
+                                              19.02,
+                                              79.88
+                                          ],
+                                          [
+                                              19.05,
+                                              79.76
+                                          ],
+                                          [
+                                              19.15,
+                                              79.74
+                                          ],
+                                          [
+                                              19.22,
+                                              79.8
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "aheri-sensitive-corridor",
+                      "name":  "Aheri Sensitive Transit Corridor",
+                      "riskLevel":  "moderate",
+                      "restrictionType":  "Sensitive Transit Zone",
+                      "whyDanger":  "Aheri belt has periodic security advisories due to movement in interior forest stretches and isolated roads after dark.",
+                      "whatToDo":  "Prefer daytime travel only, stay on major roads, and inform local police before interior travel.",
+                      "policePhone":  "07133-266218",
+                      "officialSource":  "District Police Advisory",
+                      "coordinates":  [
+                                          [
+                                              19.68,
+                                              79.86
+                                          ],
+                                          [
+                                              19.68,
+                                              80.0
+                                          ],
+                                          [
+                                              19.56,
+                                              80.02
+                                          ],
+                                          [
+                                              19.5,
+                                              79.94
+                                          ],
+                                          [
+                                              19.54,
+                                              79.82
+                                          ],
+                                          [
+                                              19.63,
+                                              79.8
+                                          ],
+                                          [
+                                              19.68,
+                                              79.86
+                                          ]
+                                      ]
+                  },
+                  {
+                      "id":  "gadchiroli-city-core",
+                      "name":  "Gadchiroli City Core Safety Zone",
+                      "riskLevel":  "moderate",
+                      "restrictionType":  "Urban Caution Zone",
+                      "whyDanger":  "Crowded transport junctions and mixed traffic near city center require extra caution, especially after dark.",
+                      "whatToDo":  "Use main roads, avoid isolated stretches at night, and keep emergency numbers ready.",
+                      "policePhone":  "07132-222100",
+                      "officialSource":  "Gadchiroli District Police Advisory",
+                      "coordinates":  [
+                                          [
+                                              20.24,
+                                              79.95
+                                          ],
+                                          [
+                                              20.24,
+                                              80.06
+                                          ],
+                                          [
+                                              20.18,
+                                              80.09
+                                          ],
+                                          [
+                                              20.12,
+                                              80.05
+                                          ],
+                                          [
+                                              20.13,
+                                              79.96
+                                          ],
+                                          [
+                                              20.19,
+                                              79.92
+                                          ],
+                                          [
+                                              20.24,
+                                              79.95
+                                          ]
+                                      ]
+                  }
+              ]
 }
