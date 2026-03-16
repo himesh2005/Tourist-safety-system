@@ -1,12 +1,12 @@
-{
+﻿{
   "city": "gadchiroli",
-  "source": "District Social & Economic Review 2023 — 17 Police Stations, 31 Outposts, 884 Personnel",
+  "source": "OpenStreetMap POI data (2026) + district emergency references",
   "policeStations": [
     {
       "id": "gadchiroli-sp",
       "name": "Superintendent of Police Office, Gadchiroli",
-      "lat": 20.1900,
-      "lng": 80.0100,
+      "lat": 20.19,
+      "lng": 80.01,
       "address": "SP Office Road, Gadchiroli Town",
       "phone": "07132-222215",
       "type": "headquarters"
@@ -14,8 +14,8 @@
     {
       "id": "gadchiroli-town-ps",
       "name": "Gadchiroli Town Police Station",
-      "lat": 20.1830,
-      "lng": 80.0050,
+      "lat": 20.183,
+      "lng": 80.005,
       "address": "Main Road, Gadchiroli",
       "phone": "07132-222218",
       "type": "town"
@@ -23,8 +23,8 @@
     {
       "id": "desaiganj-ps",
       "name": "Desaiganj (Wadsa) Police Station",
-      "lat": 20.5250,
-      "lng": 79.9800,
+      "lat": 20.525,
+      "lng": 79.98,
       "address": "Desaiganj Town, Wadsa",
       "phone": "07138-272218",
       "type": "town"
@@ -32,8 +32,8 @@
     {
       "id": "armori-ps",
       "name": "Armori Police Station",
-      "lat": 20.4760,
-      "lng": 80.0300,
+      "lat": 20.476,
+      "lng": 80.03,
       "address": "Armori Town, Gadchiroli District",
       "phone": "07138-252218",
       "type": "town"
@@ -41,8 +41,8 @@
     {
       "id": "chamorshi-ps",
       "name": "Chamorshi Police Station",
-      "lat": 19.9800,
-      "lng": 79.8200,
+      "lat": 19.9445772,
+      "lng": 79.8913349,
       "address": "Chamorshi, Gadchiroli",
       "phone": "07132-285218",
       "type": "rural"
@@ -50,17 +50,17 @@
     {
       "id": "aheri-ps",
       "name": "Aheri Police Station",
-      "lat": 19.8100,
-      "lng": 79.9000,
+      "lat": 19.41481,
+      "lng": 80.003785,
       "address": "Aheri Town, Gadchiroli",
       "phone": "07133-242218",
-      "type": "rural"
+      "type": "sensitive"
     },
     {
       "id": "etapalli-ps",
       "name": "Etapalli Police Station",
-      "lat": 19.5200,
-      "lng": 80.0800,
+      "lat": 19.52,
+      "lng": 80.08,
       "address": "Etapalli, Gadchiroli",
       "phone": "07133-275218",
       "type": "sensitive"
@@ -68,8 +68,8 @@
     {
       "id": "bhamragad-ps",
       "name": "Bhamragad Police Station",
-      "lat": 19.5050,
-      "lng": 80.3500,
+      "lat": 19.505,
+      "lng": 80.35,
       "address": "Bhamragad, Gadchiroli",
       "phone": "07133-288218",
       "type": "sensitive"
@@ -77,17 +77,35 @@
     {
       "id": "sironcha-ps",
       "name": "Sironcha Police Station",
-      "lat": 18.8500,
-      "lng": 79.9800,
+      "lat": 18.85,
+      "lng": 79.98,
       "address": "Sironcha, Gadchiroli",
       "phone": "07133-265218",
       "type": "sensitive"
     },
     {
+      "id": "allapalli-ps",
+      "name": "Allapalli Police Station",
+      "lat": 19.431903,
+      "lng": 80.060227,
+      "address": "Allapalli, Aheri Taluka",
+      "phone": "07133-244218",
+      "type": "sensitive"
+    },
+    {
+      "id": "ghot-ps",
+      "name": "Police Station, Ghot",
+      "lat": 19.8154956,
+      "lng": 79.9847023,
+      "address": "Ghot, Gadchiroli District",
+      "phone": "07132-273218",
+      "type": "rural"
+    },
+    {
       "id": "korchi-ps",
       "name": "Korchi Police Station",
-      "lat": 19.9800,
-      "lng": 79.5500,
+      "lat": 19.98,
+      "lng": 79.55,
       "address": "Korchi, Gadchiroli",
       "phone": "07132-278218",
       "type": "rural"
@@ -95,8 +113,8 @@
     {
       "id": "kurkheda-ps",
       "name": "Kurkheda Police Station",
-      "lat": 20.2000,
-      "lng": 79.7000,
+      "lat": 20.2,
+      "lng": 79.7,
       "address": "Kurkheda, Gadchiroli",
       "phone": "07132-268218",
       "type": "rural"
@@ -104,8 +122,8 @@
     {
       "id": "mulchera-ps",
       "name": "Mulchera Police Station",
-      "lat": 20.3500,
-      "lng": 80.2000,
+      "lat": 20.35,
+      "lng": 80.2,
       "address": "Mulchera, Gadchiroli",
       "phone": "07132-295218",
       "type": "rural"
@@ -113,8 +131,8 @@
     {
       "id": "dhanora-ps",
       "name": "Dhanora Police Station",
-      "lat": 20.3200,
-      "lng": 80.1200,
+      "lat": 20.32,
+      "lng": 80.12,
       "address": "Dhanora, Gadchiroli",
       "phone": "07132-292218",
       "type": "rural"
@@ -122,10 +140,10 @@
   ],
   "hospitals": [
     {
-      "id": "district-hospital",
+      "id": "district-hospital-gadchiroli",
       "name": "District General Hospital, Gadchiroli",
-      "lat": 20.1800,
-      "lng": 80.0000,
+      "lat": 20.18,
+      "lng": 80.0,
       "address": "Civil Lines, Gadchiroli",
       "phone": "07132-222501",
       "beds": 200,
@@ -133,70 +151,125 @@
       "type": "district"
     },
     {
-      "id": "hemalkasa-hospital",
-      "name": "Lok Biradari Hospital, Hemalkasa",
-      "lat": 19.4800,
-      "lng": 80.1600,
+      "id": "lokbiradari-hemalkasa",
+      "name": "Lokbiradari Multispeciality Hospital, Hemalkasa",
+      "lat": 19.4242869,
+      "lng": 80.5653456,
       "address": "Hemalkasa, Bhamragad Taluka",
-      "phone": "07138-284222",
+      "phone": "07133-270066",
       "beds": 80,
       "emergency": true,
       "type": "tribal"
     },
     {
-      "id": "aheri-rural",
-      "name": "Rural Hospital, Aheri",
-      "lat": 19.8000,
-      "lng": 79.8900,
-      "address": "Aheri Town, Gadchiroli",
-      "phone": "07133-242501",
+      "id": "rural-hospital-etapalli",
+      "name": "Rural Hospital Etapalli",
+      "lat": 19.602676,
+      "lng": 80.229383,
+      "address": "Etapalli, Gadchiroli",
+      "phone": "07133-275501",
       "beds": 30,
       "emergency": true,
       "type": "rural"
     },
     {
-      "id": "desaiganj-hospital",
-      "name": "Sub-District Hospital, Desaiganj",
-      "lat": 20.5200,
-      "lng": 79.9750,
-      "address": "Wadsa, Desaiganj",
-      "phone": "07138-272501",
+      "id": "rural-hospital-sironcha",
+      "name": "Rural Hospital, Sironcha",
+      "lat": 18.8488143,
+      "lng": 79.964452,
+      "address": "Sironcha, Gadchiroli",
+      "phone": "07133-265501",
+      "beds": 30,
+      "emergency": true,
+      "type": "rural"
+    },
+    {
+      "id": "sdh-aheri",
+      "name": "Sub District Hospital Aheri",
+      "lat": 19.41481,
+      "lng": 80.0037854,
+      "address": "Aheri, Gadchiroli",
+      "phone": "07133-242501",
       "beds": 50,
       "emergency": true,
       "type": "sub-district"
     },
     {
-      "id": "armori-hospital",
-      "name": "Rural Hospital, Armori",
-      "lat": 20.4700,
-      "lng": 80.0250,
-      "address": "Armori, Gadchiroli",
-      "phone": "07138-252501",
+      "id": "rural-hospital-dhanora",
+      "name": "Rural Hospital, Dhanora",
+      "lat": 20.274865,
+      "lng": 80.310896,
+      "address": "Dhanora, Gadchiroli",
+      "phone": "07132-292501",
       "beds": 30,
-      "emergency": false,
+      "emergency": true,
       "type": "rural"
     },
     {
-      "id": "chamorshi-hospital",
-      "name": "Primary Health Centre, Chamorshi",
-      "lat": 19.9750,
-      "lng": 79.8150,
-      "address": "Chamorshi, Gadchiroli",
-      "phone": "07132-285501",
-      "beds": 20,
-      "emergency": false,
-      "type": "phc"
+      "id": "rural-hospital-korchi",
+      "name": "Rural Hospital, Korchi",
+      "lat": 20.721105,
+      "lng": 80.481277,
+      "address": "Korchi, Gadchiroli",
+      "phone": "07132-278501",
+      "beds": 25,
+      "emergency": true,
+      "type": "rural"
     },
     {
-      "id": "sironcha-phc",
-      "name": "Primary Health Centre, Sironcha",
-      "lat": 18.8450,
-      "lng": 79.9750,
+      "id": "sdh-armori",
+      "name": "Sub District Hospital Armori",
+      "lat": 20.4697606,
+      "lng": 79.985509,
+      "address": "Armori, Gadchiroli",
+      "phone": "07138-252501",
+      "beds": 50,
+      "emergency": true,
+      "type": "sub-district"
+    },
+    {
+      "id": "rural-hospital-wadsa",
+      "name": "Rural Hospital Wadsa",
+      "lat": 20.6143798,
+      "lng": 79.9635346,
+      "address": "Desaiganj (Wadsa)",
+      "phone": "07138-272501",
+      "beds": 40,
+      "emergency": true,
+      "type": "rural"
+    },
+    {
+      "id": "general-hospital-chamorshi",
+      "name": "General Hospital, Chamorshi",
+      "lat": 19.8702455,
+      "lng": 80.003132,
+      "address": "Chamorshi, Gadchiroli",
+      "phone": "07132-285501",
+      "beds": 25,
+      "emergency": true,
+      "type": "general"
+    },
+    {
+      "id": "assisi-sevasadan-allapalli",
+      "name": "Assisi Sevasadan Hospital, Allapalli",
+      "lat": 19.4335478,
+      "lng": 80.049295,
+      "address": "Allapalli, Aheri Taluka",
+      "phone": "07133-244501",
+      "beds": 40,
+      "emergency": true,
+      "type": "mission"
+    },
+    {
+      "id": "sironcha-mission-hospital",
+      "name": "Sironcha Mission Hospital",
+      "lat": 18.847475,
+      "lng": 79.961826,
       "address": "Sironcha, Gadchiroli",
-      "phone": "07133-265501",
+      "phone": "07133-265650",
       "beds": 20,
-      "emergency": false,
-      "type": "phc"
+      "emergency": true,
+      "type": "mission"
     }
   ]
 }

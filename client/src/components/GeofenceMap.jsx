@@ -1388,7 +1388,7 @@ export default function GeofenceMap({
     const hospitalIcon = createMarkerIcon("hospital");
     const policeIcon = createMarkerIcon("police");
 
-    nearestHospitals.forEach((item) => {
+    emergencyInfo.hospitals.forEach((item) => {
       L.marker([item.latitude, item.longitude], { icon: hospitalIcon })
         .bindTooltip(`${item.name} | ${item.phone || "No phone"}`, {
           direction: "top",
@@ -1399,7 +1399,7 @@ export default function GeofenceMap({
         .addTo(emergencyLayerGroupRef.current);
     });
 
-    nearestPoliceStations.forEach((item) => {
+    emergencyInfo.police_stations.forEach((item) => {
       L.marker([item.latitude, item.longitude], { icon: policeIcon })
         .bindTooltip(`${item.name} | ${item.phone || "No phone"}`, {
           direction: "top",
@@ -1409,7 +1409,7 @@ export default function GeofenceMap({
         .bindPopup(buildEmergencyPopup(item, "police"))
         .addTo(emergencyLayerGroupRef.current);
     });
-  }, [nearestHospitals, nearestPoliceStations]);
+  }, [emergencyInfo.hospitals, emergencyInfo.police_stations]);
 
   useEffect(() => {
     if (!mapRef.current) return undefined;
